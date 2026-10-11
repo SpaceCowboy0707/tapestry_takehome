@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TYLY Weekly Flash</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --border: rgba(11,11,11,0.10);
+    --ink: #0b0b0b; --ink-2: #52514e; --muted: #757470; --grid: #e1e0d9;
+    --accent: #2a78d6; --up: #006300; --down: #c03434;
+    --up-bg: rgba(12,163,12,0.10); --down-bg: rgba(208,59,59,0.10); --flat-bg: rgba(11,11,11,0.05);
+    --pos: #2a78d6; --neg: #e34948; --axis: #c3c2b7; --sel-bg: rgba(42,120,214,0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --border: rgba(255,255,255,0.10);
+      --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9a9890; --grid: #2c2c2a;
+      --accent: #3987e5; --up: #0ca30c; --down: #e66767;
+      --up-bg: rgba(12,163,12,0.16); --down-bg: rgba(230,103,103,0.16); --flat-bg: rgba(255,255,255,0.06);
+      --pos: #3987e5; --neg: #e66767; --axis: #383835; --sel-bg: rgba(57,135,229,0.16);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --border: rgba(255,255,255,0.10);
+    --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9a9890; --grid: #2c2c2a;
+    --accent: #3987e5; --up: #0ca30c; --down: #e66767;
+    --up-bg: rgba(12,163,12,0.16); --down-bg: rgba(230,103,103,0.16); --flat-bg: rgba(255,255,255,0.06);
+      --pos: #3987e5; --neg: #e66767; --axis: #383835; --sel-bg: rgba(57,135,229,0.16);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+  h1 { font-size: 22px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+  .asof { color: var(--ink-2); font-size: 14px; }
+  .asof b { color: var(--ink); font-weight: 600; }
+  nav { display: flex; gap: 4px; margin: 20px 0 16px; border-bottom: 1px solid var(--grid); }
+  nav button { appearance: none; border: 0; background: none; color: var(--ink-2); font: inherit; font-weight: 550;
+               padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  nav button:hover { color: var(--ink); }
+  nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  section[hidden] { display: none; }
+  h2 { font-size: 15px; font-weight: 600; margin: 0 0 12px; color: var(--ink-2); }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 18px 16px;
+          display: flex; flex-direction: column; min-width: 0; }
+  .card .label { font-size: 14px; font-weight: 600; }
+  .card .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .card .value { font-size: 34px; font-weight: 620; letter-spacing: -0.02em; margin: 14px 0 6px; line-height: 1.1; }
+  .card .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; color: var(--ink-2); }
+  .card .foot { margin-top: auto; padding-top: 14px; font-size: 12px; color: var(--muted); }
+  .card.quiet .value { color: var(--ink-2); }
+  .delta { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px;
+           font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .delta.up { color: var(--up); background: var(--up-bg); }
+  .delta.down { color: var(--down); background: var(--down-bg); }
+  .delta.flat { color: var(--ink-2); background: var(--flat-bg); }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+  .split > div { min-width: 0; }
+  .split .period { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .split .value { margin: 6px 0 6px; font-size: 30px; }
+  .split .note { font-size: 13px; color: var(--ink-2); margin-top: 6px; }
+  .callout { margin-top: 14px; font-size: 13px; color: var(--ink-2); border-left: 2px solid var(--grid); padding-left: 10px; }
+  .decomp { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--grid); }
+  .decomp .cap { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .decomp table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .decomp th, .decomp td { padding: 4px 6px; text-align: right; white-space: nowrap; }
+  .decomp th { font-weight: 500; color: var(--muted); }
+  .decomp th[scope="row"] { text-align: left; color: var(--ink-2); padding-left: 0; }
+  .decomp td { color: var(--ink); }
+  .decomp td.neg { color: var(--ink-2); }
+  .decomp td.top { font-weight: 700; }
+  .decomp tr.total th, .decomp tr.total td { border-top: 1px solid var(--grid); }
+  .decomp th.total { border-left: 1px solid var(--grid); }
+  .decomp td.total, .decomp tr.total td { color: var(--ink-2); font-weight: 600; }
+  .decomp td.total { border-top: 0; border-left: 1px solid var(--grid); }
+  .decomp tr.total td.total { border-top: 1px solid var(--grid); color: var(--ink); }
+  .decomp td, .decomp th[scope="row"] { position: relative; }
+  .cellbtn { appearance: none; border: 0; background: none; font: inherit; color: inherit; padding: 2px 4px; margin: -2px -4px;
+             border-radius: 5px; cursor: pointer; min-width: 44px; text-align: right; }
+  .cellbtn:hover { background: var(--flat-bg); }
+  .cellbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .cellbtn[aria-pressed="true"] { background: var(--sel-bg); box-shadow: inset 0 0 0 1px var(--accent); }
+  .decomp .hint { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+
+  .drill { margin-top: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .drill[hidden] { display: none; }
+  .drill-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+  .drill-title { font-size: 15px; font-weight: 600; }
+  .drill-title .muted { color: var(--muted); font-weight: 500; }
+  .drill-close { appearance: none; border: 1px solid var(--border); background: none; color: var(--ink-2); font: inherit; font-size: 13px;
+                 border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  .drill-close:hover { color: var(--ink); }
+  .seg { display: flex; flex-wrap: wrap; gap: 4px; margin: 14px 0 12px; }
+  .seg button { appearance: none; border: 1px solid var(--border); background: none; color: var(--ink-2); font: inherit; font-size: 13px;
+                padding: 5px 11px; border-radius: 999px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .seg button:focus-visible, .drill-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .bars { display: grid; grid-template-columns: minmax(120px, 1.1fr) minmax(140px, 2fr) 64px; column-gap: 14px; }
+  .bars .r { display: contents; }
+  .bars .r > * { padding: 7px 0; border-bottom: 1px solid var(--grid); }
+  .bars .r:last-child > * { border-bottom: 0; }
+  .bars .r:hover > *, .bars .r:focus-within > * { background: var(--flat-bg); }
+  .bars .name { font-size: 14px; min-width: 0; padding-left: 6px; }
+  .bars .name .sub { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bars .track { position: relative; align-self: stretch; }
+  .bars .track::before { content: ""; position: absolute; left: 50%; top: 4px; bottom: 4px; width: 1px; background: var(--axis); }
+  .bars .bar { position: absolute; top: 50%; height: 14px; transform: translateY(-50%); }
+  .bars .bar.pos { left: 50%; background: var(--pos); border-radius: 0 4px 4px 0; }
+  .bars .bar.neg { right: 50%; background: var(--neg); border-radius: 4px 0 0 4px; }
+  .bars .val { display: flex; align-items: center; justify-content: flex-end; text-align: right; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; padding-right: 6px; }
+  .bars .val.neg { color: var(--ink-2); }
+  .bars .hd { font-size: 12px; color: var(--muted); font-weight: 500; padding: 0 0 6px; border-bottom: 1px solid var(--grid); }
+  .bars .hd.c { text-align: center; }
+  .bars .hd.v { text-align: right; padding-right: 6px; }
+  .bars .hd.n { padding-left: 6px; }
+  .drill-foot { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .tip { position: fixed; z-index: 10; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+         box-shadow: 0 4px 16px rgba(0,0,0,0.12); border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.35; max-width: 260px; }
+  .tip[hidden] { display: none; }
+  .tip strong { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .tip span { color: var(--ink-2); }
+  @media (max-width: 760px) {
+    .bars { grid-template-columns: minmax(0, 1.3fr) minmax(90px, 1fr) 56px; column-gap: 8px; }
+  }
+  .notes { margin-top: 18px; padding: 0; list-style: none; color: var(--muted); font-size: 12.5px; }
+  .notes li { margin: 4px 0; }
+  .src { margin-top: 28px; font-size: 12px; color: var(--muted); }
+  @media (max-width: 760px) {
+    .grid, .grid.two { grid-template-columns: 1fr; }
+    .card .value { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>TYLY Weekly Flash</h1>
+    <div class="asof" id="asof"></div>
+  </header>
+
+  <nav role="tablist" aria-label="Pages">
+    <button role="tab" id="tab-flash" aria-controls="page-flash" data-page="flash">Sales flash</button>
+    <button role="tab" id="tab-customers" aria-controls="page-customers" data-page="customers">Customers</button>
+  </nav>
+
+  <section id="page-flash" role="tabpanel" aria-labelledby="tab-flash">
+    <h2>Net sales (demand, USD after discounts)</h2>
+    <div class="grid" id="flash"></div>
+    <div class="drill" id="drill" hidden aria-live="polite">
+      <div class="drill-head">
+        <div class="drill-title" id="drill-title"></div>
+        <button class="drill-close" id="drill-close" type="button">Close</button>
+      </div>
+      <div class="seg" id="drill-dims" role="group" aria-label="Break down by"></div>
+      <div class="bars" id="drill-bars"></div>
+      <div class="drill-foot" id="drill-foot"></div>
+    </div>
+    <div class="tip" id="tip" hidden></div>
+    <ul class="notes">
+      <li>LY is matched on fiscal week and weekday (for example, Wed of W30 vs Wed of W30), not on calendar date.</li>
+      <li>No YoY at day level: about 35 transactions a day in this sample, so a single-day comparison is mostly noise.</li>
+      <li>Period to date starts at W23, the first week in the extract. A full fiscal YTD would need W1–W22.</li>
+      <li>"Where it came from" splits the YoY into percentage points: (TY − LY sales of a segment) ÷ total LY sales. Gen Z and new customers overlap, so the split uses both at once; the four cells add up to the YoY (±0.1 pp rounding). A negative cell means that segment sold less than LY. Week-to-date segments are small, so read them as directional.</li>
+    </ul>
+  </section>
+
+  <section id="page-customers" role="tabpanel" aria-labelledby="tab-customers" hidden>
+    <div class="grid two" id="customers"></div>
+    <ul class="notes">
+      <li>New = first-ever purchase with the brand; repeat = Retained or Reactivated, both from COHORT_STATUS at the time of purchase.</li>
+      <li>Counts are distinct customers in the window. Share changes are in percentage points (pp).</li>
+      <li id="small-base-note"></li>
+    </ul>
+  </section>
+
+  <div class="src" id="src"></div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+const money = v => '$' + Math.round(v).toLocaleString('en-US');
+const int = v => Math.round(v).toLocaleString('en-US');
+const pct = (v, d = 1) => (v * 100).toFixed(d) + '%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// A signed change chip. kind: 'pct' (relative), 'pp' (share points), 'abs' (count difference).
+function delta(value, kind, {neutral = false, suffix = 'YoY'} = {}) {
+  if (value === null || value === undefined) return '';
+  const eps = kind === 'pp' ? 0.0005 : kind === 'abs' ? 0 : 0.0005;
+  const dir = Math.abs(value) <= eps ? 'flat' : value > 0 ? 'up' : 'down';
+  const cls = neutral ? 'flat' : dir;
+  const arrow = dir === 'up' ? '▲' : dir === 'down' ? '▼' : '■';
+  const sign = value > 0 ? '+' : value < 0 ? '−' : '±';
+  const mag = Math.abs(value);
+  const text = kind === 'pct' ? (mag * 100).toFixed(1) + '%'
+             : kind === 'pp' ? (mag * 100).toFixed(1) + ' pp'
+             : int(mag);
+  return `<span class="delta ${cls}"><span aria-hidden="true">${arrow}</span>${sign}${text} ${suffix}</span>`;
+}
+
+// Percent change unless the LY base is too small to make a percentage meaningful.
+function countDelta(c) {
+  if (c.ly === null || c.ly === undefined) return '';
+  return c.ly < DATA.meta.small_base ? delta(c.diff, 'abs', {suffix: 'vs LY'}) : delta(c.yoy, 'pct');
+}
+
+// 2x2 split of the YoY change in percentage points; row totals answer "how much from Gen Z",
+// column totals "how much from new customers", and the corner is the YoY itself.
+const pp = v => `${v > 0 ? '+' : v < 0 ? '−' : '±'}${Math.abs(v * 100).toFixed(1)}`;
+const SEG_LABEL = {
+  gen_z_new: 'Gen Z × New', gen_z_repeat: 'Gen Z × Repeat', other_new: 'Other × New', other_repeat: 'Other × Repeat',
+  gen_z: 'Gen Z (new + repeat)', other: 'Other generations', new: 'New customers', repeat: 'Repeat customers', all: 'All customers',
+};
+const PERIOD_LABEL = {wtd: 'Week to date', ptd: 'Period to date'};
+
+// Every number in the 2x2 is a button that opens its drill-down; values come from the precomputed drill data.
+function decomp(w, period) {
+  const d = w.drill;
+  const cells = ['gen_z_new', 'gen_z_repeat', 'other_new', 'other_repeat'];
+  const top = cells.reduce((a, b) => (d[b].pp > d[a].pp ? b : a));
+  const btn = seg => `<button type="button" class="cellbtn" data-period="${period}" data-seg="${seg}"
+      aria-pressed="false" aria-label="Drill into ${SEG_LABEL[seg]}, ${PERIOD_LABEL[period]}: ${pp(d[seg].pp)} points">${pp(d[seg].pp)}</button>`;
+  const td = (seg, cls = '') => `<td class="${cls}${d[seg].pp < 0 ? ' neg' : ''}${seg === top ? ' top' : ''}">${btn(seg)}</td>`;
+  return `<div class="decomp"><div class="cap">Where the ${pp(w.yoy)}% came from (pp)</div>
+    <table>
+      <thead><tr><td></td><th scope="col">New</th><th scope="col">Repeat</th><th scope="col" class="total">Total</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Gen Z</th>${td('gen_z_new')}${td('gen_z_repeat')}${td('gen_z', 'total')}</tr>
+        <tr><th scope="row">Other</th>${td('other_new')}${td('other_repeat')}${td('other', 'total')}</tr>
+        <tr class="total"><th scope="row">Total</th>${td('new')}${td('repeat')}${td('all', 'total')}</tr>
+      </tbody>
+    </table><div class="hint">Click any number to break it down</div></div>`;
+}
+
+const drillState = {period: 'ptd', seg: null, dim: 'GEO_REGION'};
+const shortName = (col, n) => col === 'PROD_CATEGORY' ? n.replace(/^\d+\./, '') : n;
+const compact = v => Math.abs(v) >= 1000 ? '$' + (v / 1000).toFixed(1) + 'K' : '$' + Math.round(v);
+
+function renderDrill() {
+  const panel = document.getElementById('drill');
+  document.querySelectorAll('.cellbtn').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.period === drillState.period && b.dataset.seg === drillState.seg)));
+  if (!drillState.seg) { panel.hidden = true; return; }
+  const w = DATA.flash[drillState.period], seg = w.drill[drillState.seg];
+  const rows = seg.dims[drillState.dim];
+
+  const title = document.getElementById('drill-title');
+  title.textContent = '';
+  title.append(`${SEG_LABEL[drillState.seg]} · ${pp(seg.pp)} pp `);
+  const m = document.createElement('span'); m.className = 'muted';
+  m.textContent = `of ${pp(w.yoy)}% · ${PERIOD_LABEL[drillState.period]}`;
+  title.append(m);
+
+  const dims = document.getElementById('drill-dims');
+  dims.innerHTML = '';
+  Object.entries(DATA.meta.drill_dims).forEach(([col, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', String(col === drillState.dim));
+    b.addEventListener('click', () => { drillState.dim = col; renderDrill(); });
+    dims.append(b);
+  });
+
+  const max = Math.max(...rows.map(r => Math.abs(r.pp)), 1e-9);
+  const bars = document.getElementById('drill-bars');
+  bars.innerHTML = '<div class="hd n">' + esc(DATA.meta.drill_dims[drillState.dim]) +
+    '</div><div class="hd c">Contribution to YoY</div><div class="hd v">pp</div>';
+  rows.forEach(r => {
+    const row = document.createElement('div'); row.className = 'r'; row.tabIndex = 0;
+    const name = document.createElement('div'); name.className = 'name';
+    name.textContent = shortName(drillState.dim, r.name);
+    const sub = document.createElement('span'); sub.className = 'sub';
+    sub.textContent = `${compact(r.ty)} vs LY ${compact(r.ly)}`;
+    name.append(sub);
+    const track = document.createElement('div'); track.className = 'track';
+    const bar = document.createElement('div'); bar.className = 'bar ' + (r.pp >= 0 ? 'pos' : 'neg');
+    bar.style.width = (Math.abs(r.pp) / max * 50) + '%';
+    track.append(bar);
+    const val = document.createElement('div'); val.className = 'val' + (r.pp < 0 ? ' neg' : '');
+    val.textContent = pp(r.pp);
+    row.append(name, track, val);
+    const tipText = () => [`${pp(r.pp)} pp of YoY`,
+      `${shortName(drillState.dim, r.name)} · ${SEG_LABEL[drillState.seg]}`,
+      `${money(r.ty)} vs LY ${money(r.ly)} (${r.diff >= 0 ? '+' : '−'}${money(Math.abs(r.diff))})`];
+    row.addEventListener('pointermove', e => showTip(tipText(), e.clientX, e.clientY));
+    row.addEventListener('pointerleave', hideTip);
+    row.addEventListener('focus', () => { const b = row.querySelector('.track').getBoundingClientRect(); showTip(tipText(), b.left + b.width / 2, b.top); });
+    row.addEventListener('blur', hideTip);
+    bars.append(row);
+  });
+
+  const sum = rows.reduce((s, r) => s + r.pp, 0);
+  document.getElementById('drill-foot').textContent =
+    `Rows add up to ${pp(sum)} pp, the selected cell. Points are (TY − LY sales of the row) ÷ total LY sales of the period, so rows are comparable across cells.`;
+  panel.hidden = false;
+}
+
+function showTip(lines, x, y) {
+  const t = document.getElementById('tip');
+  t.textContent = '';
+  const s = document.createElement('strong'); s.textContent = lines[0]; t.append(s);
+  lines.slice(1).forEach(l => { const e = document.createElement('span'); e.textContent = l; t.append(e, document.createElement('br')); });
+  t.hidden = false;
+  const r = t.getBoundingClientRect();
+  t.style.left = Math.min(x + 12, window.innerWidth - r.width - 8) + 'px';
+  t.style.top = Math.max(8, y - r.height - 12) + 'px';
+}
+function hideTip() { document.getElementById('tip').hidden = true; }
+
+function renderFlash() {
+  const f = DATA.flash;
+  const y = f.yesterday;
+  const tile = (label, sub, body, foot = '', quiet = false) =>
+    `<article class="card${quiet ? ' quiet' : ''}"><div class="label">${label}</div><div class="sub">${esc(sub)}</div>${body}${foot ? `<div class="foot">${esc(foot)}</div>` : ''}</article>`;
+  const compared = (w, period) => `<div class="value">${money(w.ty)}</div>
+      <div class="row">${delta(w.yoy, 'pct')}<span>LY ${money(w.ly)}</span></div>${decomp(w, period)}`;
+  document.getElementById('flash').innerHTML =
+    tile('Yesterday', y.label,
+         `<div class="value">${money(y.ty)}</div><div class="row"><span>${int(y.transactions)} transactions</span></div>`,
+         'Day-level YoY not shown') +
+    tile('Week to date', DATA.flash.wtd.label, compared(f.wtd, 'wtd'), `${f.wtd.ty_range} vs ${f.wtd.ly_range}`) +
+    tile('Period to date', DATA.flash.ptd.label, compared(f.ptd, 'ptd'), `${f.ptd.ty_range} vs ${f.ptd.ly_range}`);
+  document.querySelectorAll('.cellbtn').forEach(b => b.addEventListener('click', () => {
+    const same = drillState.period === b.dataset.period && drillState.seg === b.dataset.seg;
+    Object.assign(drillState, {period: b.dataset.period, seg: same ? null : b.dataset.seg});
+    renderDrill();
+    if (!same) document.getElementById('drill').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  }));
+  document.getElementById('drill-close').addEventListener('click', () => { drillState.seg = null; renderDrill(); });
+  // Open on the largest contributor of the period, so the drill-down is visible on first load.
+  const cells = ['gen_z_new', 'gen_z_repeat', 'other_new', 'other_repeat'];
+  drillState.seg = cells.reduce((a, b) => (f.ptd.drill[b].pp > f.ptd.drill[a].pp ? b : a));
+  renderDrill();
+}
+
+function renderCustomers() {
+  const c = DATA.customers;
+  const periods = [['wtd', 'Week to date'], ['ptd', 'Period to date']];
+
+  const genz = periods.map(([k, name]) => {
+    const n = c.gen_z_new[k], s = c.gen_z_share_of_new[k];
+    return `<div><div class="period">${name}</div>
+      <div class="value">${int(n.ty)}</div>
+      <div class="row">${countDelta(n)}<span>LY ${int(n.ly)}</span></div>
+      <div class="note">${pct(s.ty, 0)} of all new customers (LY ${pct(s.ly, 0)})</div></div>`;
+  }).join('');
+
+  const repeat = periods.map(([k, name]) => {
+    const s = c.repeat_share[k], n = c.repeat_customers[k];
+    return `<div><div class="period">${name}</div>
+      <div class="value">${pct(s.ty)}</div>
+      <div class="row">${delta(s.diff, 'pp', {neutral: true})}<span>LY ${pct(s.ly)}</span></div>
+      <div class="note">${int(n.ty)} repeat customers (LY ${int(n.ly)}, ${n.yoy >= 0 ? '+' : '−'}${Math.abs(n.yoy * 100).toFixed(1)}%)</div></div>`;
+  }).join('');
+
+  // Explain a falling share when the repeat base itself held up: the denominator grew.
+  const p = c.repeat_share.ptd, pn = c.repeat_customers.ptd;
+  const mix = p.diff < 0 && Math.abs(pn.yoy) < 0.02
+    ? `<div class="callout">Share is down because new customers grew, not because repeat customers fell: the repeat count is roughly flat period to date.</div>` : '';
+
+  document.getElementById('customers').innerHTML =
+    `<article class="card"><div class="label">Gen Z new customers</div><div class="sub">First-ever purchase, Gen Z</div><div class="split">${genz}</div></article>` +
+    `<article class="card"><div class="label">Repeat customer share</div><div class="sub">Retained + Reactivated, share of all customers</div><div class="split">${repeat}</div>${mix}</article>`;
+  document.getElementById('small-base-note').textContent =
+    `When the LY count is under ${DATA.meta.small_base}, the change is shown as a difference in customers rather than a percentage.`;
+}
+
+function show(page) {
+  document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.page === page)));
+  document.querySelectorAll('section[role="tabpanel"]').forEach(s => { s.hidden = s.id !== 'page-' + page; });
+}
+
+const m = DATA.meta;
+document.getElementById('asof').innerHTML = `Data as of <b>${esc(m.as_of_label)}</b> · ${esc(m.fiscal)}`;
+document.getElementById('src').textContent = `Source ${m.source} · fingerprint ${m.fingerprint} · built ${m.built_at}`;
+renderFlash();
+renderCustomers();
+document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => { location.hash = b.dataset.page; }));
+window.addEventListener('hashchange', () => show(location.hash.slice(1) || 'flash'));
+show(['flash', 'customers'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'flash');
+</script>
+</body>
+</html>

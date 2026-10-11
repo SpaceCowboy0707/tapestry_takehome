@@ -1,0 +1,23 @@
+# Source data and exercise materials: keep the provided extract and brief out of the repo
+data/raw/*
+!data/raw/.gitkeep
+*.xlsx
+*.xls
+take_home_brief*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+
+# Local runtime state
+runtime/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
