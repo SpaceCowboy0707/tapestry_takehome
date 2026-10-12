@@ -6,6 +6,7 @@ This is the single definition used by the dashboard, the facts file and the AI b
 
 def net_sales(df):      return round(float(df['DEMAND_AMT'].sum()), 2)
 def transactions(df):   return int(df['TXN_ID'].nunique())
+def units(df):          return int(df['UNIT_QTY'].sum())
 def customers(df):      return int(df['CUST_ID'].nunique())
 def new_customers(df):  return customers(df[df.COHORT_STATUS == 'New'])
 def gen_z_new(df):      return new_customers(df[df.CUST_AGE_GROUP == 'Gen Z'])
@@ -17,20 +18,45 @@ def repeat_share(df):
     return repeat_customers(df) / c if c else None
 
 
+def insider_share(df):
+    c = customers(df)
+    return customers(df[df.INSIDER_FLAG == 'Y']) / c if c else None
+
+
 def gen_z_share_of_new(df):
     n = new_customers(df)
     return gen_z_new(df) / n if n else None
 
 
+def aov(df):
+    t = transactions(df)
+    return net_sales(df) / t if t else None
+
+
+def units_per_order(df):
+    t = transactions(df)
+    return units(df) / t if t else None
+
+
+def gen_z_share(df):
+    c = customers(df)
+    return customers(df[df.CUST_AGE_GROUP == 'Gen Z']) / c if c else None
+
+
 MEASURES = {
     'net_sales':          dict(fn=net_sales,          label='Net sales'),
     'transactions':       dict(fn=transactions,       label='Transactions'),
+    'units':              dict(fn=units,              label='Units sold'),
     'customers':          dict(fn=customers,          label='Customers'),
     'new_customers':      dict(fn=new_customers,      label='New customers'),
     'gen_z_new':          dict(fn=gen_z_new,          label='Gen Z new customers'),
     'gen_z_share_of_new': dict(fn=gen_z_share_of_new, label='Gen Z share of new customers'),
     'repeat_customers':   dict(fn=repeat_customers,   label='Repeat customers'),
     'repeat_share':       dict(fn=repeat_share,       label='Repeat customer share'),
+    'insider_share':      dict(fn=insider_share,      label='Share of customers in Insider'),
+    'aov':                dict(fn=aov,                label='Average order value'),
+    'units_per_order':    dict(fn=units_per_order,    label='Units per order'),
+    'gen_z_share':        dict(fn=gen_z_share,        label='Gen Z share of customers'),
 }
 
 # Below this LY base a percentage change is misleading, so show the absolute difference.
@@ -58,6 +84,20 @@ GROUPS = {
     'repeat': lambda d: ~_is_new(d),
     'all':    lambda d: d.index == d.index,
 }
+
+# "Other" expands into the remaining generations; their cells add up to the Other row.
+OTHER_GENERATIONS = {'millennial': 'Millennial', 'gen_x': 'Gen X', 'boomer': 'Boomer'}
+
+
+def _generation(value):
+    return lambda d: d.CUST_AGE_GROUP == value
+
+
+for _key, _value in OTHER_GENERATIONS.items():
+    _gen = _generation(_value)
+    GROUPS[_key] = _gen
+    GROUPS[f'{_key}_new'] = (lambda g: lambda d: g(d) & _is_new(d))(_gen)
+    GROUPS[f'{_key}_repeat'] = (lambda g: lambda d: g(d) & ~_is_new(d))(_gen)
 
 DRILL_DIMS = {
     'GEO_REGION':     'Region',
@@ -88,12 +128,42 @@ def drill(window, key='net_sales'):
             rows = []
             for n in names:
                 a, b = fn(st[st[col] == n]), fn(sl[sl[col] == n])
-                rows.append(dict(name=n, ty=a, ly=b, diff=round(a - b, 2), pp=(a - b) / base if base else None))
+                rows.append(dict(name=n, ty=a, ly=b, diff=round(a - b, 2), pp=(a - b) / base if base else None,
+                                 yoy=(a / b - 1) if b else None))
             rows.sort(key=lambda r: r['pp'], reverse=True)
             dims[col] = rows
         a, b = fn(st), fn(sl)
-        out[seg] = dict(ty=a, ly=b, diff=round(a - b, 2), pp=(a - b) / base if base else None, dims=dims)
+        out[seg] = dict(ty=a, ly=b, diff=round(a - b, 2), pp=(a - b) / base if base else None,
+                        yoy=(a / b - 1) if b else None, dims=dims)
     return out
+
+
+def weekly(df, ref, key='net_sales'):
+    """FY26 week sequence against the same fiscal week LY, up to the as-of week.
+
+    The as-of week is usually incomplete, so it also carries LY on the same fiscal days; its YoY uses that,
+    and week-over-week changes are only given between complete weeks.
+    """
+    from core.periods import TY, LY
+    fn = MEASURES[key]['fn']
+    ty, ly = df[df.FISCAL_YR == TY], df[df.FISCAL_YR == LY]
+    rows = []
+    for wk in sorted(int(w) for w in df.WK.unique()):
+        if wk > ref['wk']:
+            break
+        partial = wk == ref['wk'] and ref['dow'] < 6
+        t, l = ty[ty.WK == wk], ly[ly.WK == wk]
+        if partial:
+            t = t[t.DOW <= ref['dow']]
+        a, b = fn(t), fn(l)
+        same = fn(l[l.DOW <= ref['dow']]) if partial else b
+        rows.append(dict(wk=wk, ty=a, ly=b, ly_same_days=same, partial=partial,
+                         days=ref['dow'] + 1 if partial else 7, yoy=(a / same - 1) if same else None))
+    for prev, cur in zip(rows, rows[1:]):
+        if not cur['partial'] and not prev['partial']:
+            cur['wow'] = cur['ty'] / prev['ty'] - 1 if prev['ty'] else None
+            cur['ly_wow'] = cur['ly'] / prev['ly'] - 1 if prev['ly'] else None
+    return rows
 
 
 def contribution(window, key='net_sales'):

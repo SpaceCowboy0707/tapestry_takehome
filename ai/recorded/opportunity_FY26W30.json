@@ -1,0 +1,35 @@
+{
+  "model": "claude-opus-5-5 (Claude, in the Cowork session used to build this project)",
+  "generated_at": "2026-10-12",
+  "prompt_file": "ai/prompt_input_opportunity.txt",
+  "fingerprint": "83cad9e6",
+  "picked": "Brooklyn",
+  "card": {
+    "headline": "Brooklyn is the fastest-growing family with first-time Gen Z customers that still has stock, so it could keep that growth going while Tabby is short.",
+    "sections": [
+      {"title": "Target customers", "items": [
+        {"kind": "fact", "text": "First-time Gen Z customers rose from {seg_customers_ly} to {seg_customers_ty} and brought {seg_growth_share} of all sales growth."}
+      ]},
+      {"title": "Related products", "items": [
+        {"kind": "fact", "text": "Brooklyn drew {pick_customers_ty} first-time Gen Z customers against {pick_customers_ly} last year, adding {pick_diff} in sales from them."},
+        {"kind": "fact", "text": "Tabby ({lead_diff}) and Pillow Tabby ({lead2_diff}) gained more from these customers but have only {lead_cover} and {lead2_cover} weeks of stock left."}
+      ]},
+      {"title": "Evidence", "items": [
+        {"kind": "fact", "text": "Brooklyn has {pick_cover} weeks of stock ({pick_stock} units) against {pick_cover_ly} last year, and its total sales are up {pick_sales_yoy}."},
+        {"kind": "fact", "text": "{pick_store_share} of first-time Gen Z purchases of Brooklyn were made in stores."}
+      ]},
+      {"title": "Why it could work", "items": [
+        {"kind": "hypothesis", "text": "Gen Z shoppers who come in for Tabby may choose Brooklyn instead if it sits next to it, which would keep first-time Gen Z growth going while Tabby is restocked."}
+      ]},
+      {"title": "Suggested action", "items": [
+        {"kind": "action", "text": "Feature Brooklyn beside Tabby in a small set of stores and on the online pages Gen Z shoppers visit, for the next few weeks."},
+        {"kind": "action", "text": "Watch first-time Gen Z customers buying Brooklyn each week in those stores against similar stores without the change."}
+      ]},
+      {"title": "Missing data", "items": [
+        {"kind": "limit", "text": "Stock and traffic by store, to know where Brooklyn is available and where Gen Z shoppers come in."},
+        {"kind": "limit", "text": "Promotion and price history, since part of Brooklyn's growth may come from discounts."},
+        {"kind": "limit", "text": "The base is small, {pick_customers_ty} customers, so treat this as a test to run rather than a forecast."}
+      ]}
+    ]
+  }
+}

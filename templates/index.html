@@ -11,7 +11,8 @@
     --ink: #0b0b0b; --ink-2: #52514e; --muted: #757470; --grid: #e1e0d9;
     --accent: #2a78d6; --up: #006300; --down: #c03434;
     --up-bg: rgba(12,163,12,0.10); --down-bg: rgba(208,59,59,0.10); --flat-bg: rgba(11,11,11,0.05);
-    --pos: #2a78d6; --neg: #e34948; --axis: #c3c2b7; --sel-bg: rgba(42,120,214,0.10);
+    --pos: #2a78d6; --neg: #e34948; --axis: #c3c2b7; --ly: #898781; --total: #b8b6ae;
+    --crit: #d03b3b; --crit-text: #b42f2f; --warn: #d99000; --sel-bg: rgba(42,120,214,0.10);
   }
   @media (prefers-color-scheme: dark) {
     :root:where(:not([data-theme="light"])) {
@@ -20,7 +21,8 @@
       --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9a9890; --grid: #2c2c2a;
       --accent: #3987e5; --up: #0ca30c; --down: #e66767;
       --up-bg: rgba(12,163,12,0.16); --down-bg: rgba(230,103,103,0.16); --flat-bg: rgba(255,255,255,0.06);
-      --pos: #3987e5; --neg: #e66767; --axis: #383835; --sel-bg: rgba(57,135,229,0.16);
+      --pos: #3987e5; --neg: #e66767; --axis: #383835; --ly: #9a9890; --total: #55544f;
+      --crit: #e66767; --crit-text: #f08a8a; --warn: #fab219; --sel-bg: rgba(57,135,229,0.16);
     }
   }
   :root[data-theme="dark"] {
@@ -29,7 +31,8 @@
     --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9a9890; --grid: #2c2c2a;
     --accent: #3987e5; --up: #0ca30c; --down: #e66767;
     --up-bg: rgba(12,163,12,0.16); --down-bg: rgba(230,103,103,0.16); --flat-bg: rgba(255,255,255,0.06);
-      --pos: #3987e5; --neg: #e66767; --axis: #383835; --sel-bg: rgba(57,135,229,0.16);
+    --pos: #3987e5; --neg: #e66767; --axis: #383835; --ly: #9a9890; --total: #55544f;
+    --crit: #e66767; --crit-text: #f08a8a; --warn: #fab219; --sel-bg: rgba(57,135,229,0.16);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--page); color: var(--ink);
@@ -39,103 +42,251 @@
   h1 { font-size: 22px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
   .asof { color: var(--ink-2); font-size: 14px; }
   .asof b { color: var(--ink); font-weight: 600; }
-  nav { display: flex; gap: 4px; margin: 20px 0 16px; border-bottom: 1px solid var(--grid); }
+  nav { display: flex; gap: 4px; margin: 20px 0 8px; border-bottom: 1px solid var(--grid); }
   nav button { appearance: none; border: 0; background: none; color: var(--ink-2); font: inherit; font-weight: 550;
                padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
   nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
   nav button:hover { color: var(--ink); }
-  nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   section[hidden] { display: none; }
-  h2 { font-size: 15px; font-weight: 600; margin: 0 0 12px; color: var(--ink-2); }
-  .grid { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 18px 16px;
-          display: flex; flex-direction: column; min-width: 0; }
-  .card .label { font-size: 14px; font-weight: 600; }
-  .card .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
-  .card .value { font-size: 34px; font-weight: 620; letter-spacing: -0.02em; margin: 14px 0 6px; line-height: 1.1; }
-  .card .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; color: var(--ink-2); }
-  .card .foot { margin-top: auto; padding-top: 14px; font-size: 12px; color: var(--muted); }
-  .card.quiet .value { color: var(--ink-2); }
+
+  /* A block answers one business question: the question, a one-sentence answer, then the evidence. */
+  .block { margin-top: 28px; }
+  .q { font-size: 12px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .answer { font-size: 18px; line-height: 1.4; font-weight: 550; margin: 6px 0 14px; max-width: 820px; text-wrap: pretty; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .panel + .panel { margin-top: 12px; }
+  .panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 8px 16px; margin-bottom: 10px; }
+  .panel-title { font-size: 15px; font-weight: 600; }
+  .panel-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  .kpis { display: grid; gap: 12px; grid-template-columns: 1.35fr 1fr 0.8fr; margin-bottom: 12px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; min-width: 0; }
+  .kpi .label { font-size: 14px; font-weight: 600; }
+  .kpi .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .kpi .value { font-size: 30px; font-weight: 620; letter-spacing: -0.02em; margin: 12px 0 6px; line-height: 1.1; }
+  .kpi.hero .value { font-size: 44px; }
+  .kpi.quiet .value { font-size: 24px; color: var(--ink-2); }
+  .kpi .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; color: var(--ink-2); }
   .delta { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px;
            font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
   .delta.up { color: var(--up); background: var(--up-bg); }
   .delta.down { color: var(--down); background: var(--down-bg); }
   .delta.flat { color: var(--ink-2); background: var(--flat-bg); }
-  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
-  .split > div { min-width: 0; }
-  .split .period { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-  .split .value { margin: 6px 0 6px; font-size: 30px; }
-  .split .note { font-size: 13px; color: var(--ink-2); margin-top: 6px; }
-  .callout { margin-top: 14px; font-size: 13px; color: var(--ink-2); border-left: 2px solid var(--grid); padding-left: 10px; }
-  .decomp { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--grid); }
-  .decomp .cap { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
-  .decomp table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
-  .decomp th, .decomp td { padding: 4px 6px; text-align: right; white-space: nowrap; }
-  .decomp th { font-weight: 500; color: var(--muted); }
-  .decomp th[scope="row"] { text-align: left; color: var(--ink-2); padding-left: 0; }
-  .decomp td { color: var(--ink); }
-  .decomp td.neg { color: var(--ink-2); }
-  .decomp td.top { font-weight: 700; }
-  .decomp tr.total th, .decomp tr.total td { border-top: 1px solid var(--grid); }
-  .decomp th.total { border-left: 1px solid var(--grid); }
-  .decomp td.total, .decomp tr.total td { color: var(--ink-2); font-weight: 600; }
-  .decomp td.total { border-top: 0; border-left: 1px solid var(--grid); }
-  .decomp tr.total td.total { border-top: 1px solid var(--grid); color: var(--ink); }
-  .decomp td, .decomp th[scope="row"] { position: relative; }
-  .cellbtn { appearance: none; border: 0; background: none; font: inherit; color: inherit; padding: 2px 4px; margin: -2px -4px;
-             border-radius: 5px; cursor: pointer; min-width: 44px; text-align: right; }
-  .cellbtn:hover { background: var(--flat-bg); }
-  .cellbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .cellbtn[aria-pressed="true"] { background: var(--sel-bg); box-shadow: inset 0 0 0 1px var(--accent); }
-  .decomp .hint { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
 
-  .drill { margin-top: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 2px; flex-wrap: wrap; }
+  .seg button { appearance: none; border: 0; background: none; color: var(--ink-2); font: inherit; font-size: 13px;
+                padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--flat-bg); color: var(--ink); font-weight: 600; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  /* AI brief */
+  .brief { margin-top: 20px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+           border-radius: 10px; padding: 18px 20px; }
+  .brief-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-2);
+           background: var(--flat-bg); border-radius: 999px; padding: 3px 10px; }
+  .badge.ok b { color: var(--up); }
+  .badge.bad { color: var(--down); background: var(--down-bg); }
+  .brief-headline { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 8px 0 14px; max-width: 900px; text-wrap: pretty; }
+  .brief-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 6px 28px; }
+  .brief-sec h3 { font-size: 13px; font-weight: 650; margin: 6px 0 6px; }
+  .brief-sec ul { margin: 0 0 8px; padding-left: 18px; }
+  .brief-sec li { margin: 6px 0; font-size: 14.5px; line-height: 1.5; }
+  .brief-sec li .kind { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 4px;
+                        padding: 0 5px; margin-left: 6px; white-space: nowrap; }
+  .fact { font-weight: 650; font-variant-numeric: tabular-nums; border-bottom: 1px dotted var(--muted); cursor: help; }
+  .fact:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
+  .brief-foot { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+  .brief-foot code { font-size: 12px; }
+  .brief-foot:empty { display: none; }
+  .brief-errors { margin: 8px 0 0; padding-left: 18px; color: var(--down); font-size: 13px; }
+  @media (max-width: 760px) { .brief-grid { grid-template-columns: 1fr; } .brief-headline { font-size: 17px; } }
+  /* Ask the data (chat prototype) */
+  .chat-intro { color: var(--ink-2); font-size: 14px; max-width: 780px; margin: 8px 0 18px; text-wrap: pretty; }
+  .chat-log { display: flex; flex-direction: column; gap: 14px; }
+  .msg.user { align-self: flex-end; max-width: 80%; background: var(--ink); color: var(--surface); padding: 9px 14px;
+              border-radius: 14px 14px 4px 14px; font-size: 14.5px; }
+  .msg.bot { align-self: stretch; background: var(--surface); border: 1px solid var(--border); border-radius: 4px 14px 14px 14px; padding: 14px 18px; }
+  .msg .who { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
+  .msg.bot .brief-headline { font-size: 16.5px; margin: 0 0 10px; }
+  .msg.bot p.plain { margin: 0 0 10px; font-size: 14.5px; }
+  .msg.bot .chips { margin: 4px 0 0; }
+  .msg.wait { color: var(--muted); font-size: 13.5px; }
+  .chat-form { position: sticky; bottom: 0; display: flex; gap: 8px; margin-top: 16px; padding: 10px 0; background: var(--page); }
+  .chat-form input { flex: 1; min-width: 0; font: inherit; padding: 10px 12px; color: var(--ink); background: var(--surface);
+                     border: 1px solid var(--border); border-radius: 10px; }
+  .chat-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .chat-form button { font: inherit; font-weight: 600; padding: 0 18px; color: #fff; background: var(--accent); border: 0; border-radius: 10px; cursor: pointer; }
+  details.trace { margin-top: 12px; border-top: 1px solid var(--grid); padding-top: 10px; }
+  details.trace summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--accent); }
+  .steps { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+  .steps h4 { margin: 0 0 6px; font-size: 12px; font-weight: 650; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .steps .lead { margin: 0 0 8px; font-size: 13px; color: var(--ink-2); }
+  .call { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; background: var(--page); }
+  .call + .call { margin-top: 8px; }
+  .call-head { font-size: 13.5px; }
+  .call-head code { margin-right: 8px; }
+  .call-head code, .mono { font: 600 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .sig { display: block; margin: 4px 0 8px; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
+  table.mini { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  table.mini th, table.mini td { padding: 4px 8px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
+  table.mini th:first-child, table.mini td:first-child { text-align: left; }
+  table.mini th { font-weight: 500; color: var(--muted); }
+  table.mini td.wrap, table.mini th.wrap { white-space: normal; text-align: left; }
+  table.mini td.wrap { color: var(--ink-2); }
+  .raw { margin: 0; padding: 10px 12px; font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-2);
+         background: var(--page); border: 1px solid var(--border); border-radius: 8px; white-space: pre-wrap; word-break: break-word; }
+  .raw .ph { color: var(--accent); font-weight: 600; }
+  .checks { list-style: none; margin: 0; padding: 0; font-size: 13.5px; }
+  .checks li { padding: 3px 0; }
+  .checks .ok { color: var(--up); font-weight: 700; }
+  .checks .no { color: var(--down); font-weight: 700; }
+  @media (max-width: 760px) { .msg.user { max-width: 92%; } .msg.bot { padding: 12px 14px; } }
+  /* Growth opportunity */
+  .opp { margin-top: 12px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--up);
+         border-radius: 10px; padding: 16px 20px; }
+  .opp-start { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 10px; }
+  .opp-btn { font: inherit; font-weight: 600; font-size: 14px; padding: 9px 16px; color: #fff; background: var(--accent); border: 0; border-radius: 8px; cursor: pointer; }
+  .opp-start .hint { margin: 0; }
+  .opp-start[hidden] { display: none; }
+  .badge:empty { display: none; }
+  .opp-grid { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 0 18px; }
+  .opp-grid h3 { margin: 0; padding: 9px 0; font-size: 13px; font-weight: 650; border-top: 1px solid var(--grid); }
+  .opp-grid ul { margin: 0; padding: 6px 0 6px 18px; border-top: 1px solid var(--grid); }
+  .opp-grid li { margin: 3px 0; font-size: 14.5px; line-height: 1.5; }
+  .opp-grid li .kind { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; margin-left: 6px; white-space: nowrap; }
+  details.why { margin-top: 10px; font-size: 13px; }
+  details.why summary { cursor: pointer; color: var(--accent); font-size: 12.5px; font-weight: 600; }
+  details.why .rule { margin: 8px 0; color: var(--ink-2); }
+  @media (max-width: 760px) { .opp-grid { grid-template-columns: 1fr; } .opp-grid ul { border-top: 0; padding-top: 0; } }
+  /* Weekly trend */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-2); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .chart { position: relative; touch-action: pan-y; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .ln { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .ln.ty { stroke: var(--pos); }
+  .ln.ly { stroke: var(--ly); stroke-dasharray: 5 4; }
+  .pt { stroke: var(--surface); stroke-width: 2; }
+  .pt.ty { fill: var(--pos); }
+  .pt.ly { fill: var(--ly); }
+  .pt.partial { fill: var(--surface); stroke: var(--pos); stroke-width: 2; }
+  .pt.partial-ly { fill: var(--surface); stroke: var(--ly); stroke-width: 2; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .axis-text { fill: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+  .yoy-text { fill: var(--ink-2); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  svg.narrow .yoy-text, svg.narrow .axis-text { font-size: 9.5px; }
+  .end-label { font-size: 12px; font-weight: 600; }
+  .end-label.ty { fill: var(--ink); }
+  .end-label.ly { fill: var(--ink-2); }
+  .partial-label { fill: var(--muted); font-size: 11px; }
+  .crosshair { stroke: var(--axis); stroke-width: 1; }
+  .note { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+  details.table { margin-top: 10px; font-size: 13px; }
+  details.table summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
+  details.table table { margin-top: 8px; border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  details.table th, details.table td { padding: 5px 8px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  details.table th:first-child, details.table td:first-child { text-align: left; }
+  details.table th { color: var(--muted); font-weight: 500; }
+  .scroll { overflow-x: auto; }
+
+  /* Waterfall and bar lists share one row grid: label | bar | value */
+  .rows { display: grid; grid-template-columns: minmax(130px, 1.2fr) minmax(140px, 2.4fr) minmax(76px, auto); column-gap: 14px; }
+  .rows.with-stock { grid-template-columns: minmax(130px, 1.2fr) minmax(120px, 2fr) minmax(76px, auto) minmax(120px, auto); }
+  .rows .r { display: contents; }
+  .rows .r > * { padding: 8px 0; border-bottom: 1px solid var(--grid); min-width: 0; }
+  .rows .r:last-child > * { border-bottom: 0; }
+  .rows .r.click { cursor: pointer; }
+  .rows .r.click:hover > *, .rows .r:focus-within > *, .rows .r:focus > * { background: var(--flat-bg); }
+  .rows .r.sel > * { background: var(--sel-bg); }
+  .rows .r:focus { outline: none; }
+  .rows .r:focus-visible > :first-child { box-shadow: inset 2px 0 0 var(--accent); }
+  .rows .name { font-size: 14px; padding-left: 6px; }
+  .rows .name .sub { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rows .r.total .name { font-weight: 600; }
+  .rows .track { position: relative; align-self: stretch; }
+  .rows .bar { position: absolute; top: 50%; height: 16px; transform: translateY(-50%); border-radius: 4px; }
+  .rows .bar.pos { background: var(--pos); }
+  .rows .bar.neg { background: var(--neg); }
+  .rows .bar.total { background: var(--total); }
+  .rows .zero { position: absolute; top: 4px; bottom: 4px; width: 1px; background: var(--axis); }
+  .rows .link { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed var(--axis); }
+  .rows .val { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; text-align: right;
+               font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; padding-right: 6px; }
+  .rows .val .sub { font-size: 12px; font-weight: 400; color: var(--muted); }
+  .rows .val.neg { color: var(--ink-2); }
+  .rows .stock { display: flex; align-items: center; font-size: 13px; padding-right: 6px; }
+  .rows .hd { font-size: 12px; color: var(--muted); font-weight: 500; padding: 0 0 6px; border-bottom: 1px solid var(--grid); }
+  .rows .hd.v { text-align: right; padding-right: 6px; }
+  .rows .hd.n { padding-left: 6px; }
+  .tag { font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; margin-left: 6px; white-space: nowrap; }
+  .axis-break { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 12px; font-size: 13.5px; color: var(--ink-2); }
+  .facts b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .more { appearance: none; border: 1px solid var(--border); background: none; color: var(--ink-2); font: inherit; font-size: 13px;
+          border-radius: 6px; padding: 5px 10px; cursor: pointer; margin-top: 10px; }
+  .more:hover { color: var(--ink); }
+
+  .drill { margin-top: 12px; }
   .drill[hidden] { display: none; }
-  .drill-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
-  .drill-title { font-size: 15px; font-weight: 600; }
-  .drill-title .muted { color: var(--muted); font-weight: 500; }
-  .drill-close { appearance: none; border: 1px solid var(--border); background: none; color: var(--ink-2); font: inherit; font-size: 13px;
-                 border-radius: 6px; padding: 4px 10px; cursor: pointer; }
-  .drill-close:hover { color: var(--ink); }
-  .seg { display: flex; flex-wrap: wrap; gap: 4px; margin: 14px 0 12px; }
-  .seg button { appearance: none; border: 1px solid var(--border); background: none; color: var(--ink-2); font: inherit; font-size: 13px;
-                padding: 5px 11px; border-radius: 999px; cursor: pointer; }
-  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-  .seg button:focus-visible, .drill-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .bars { display: grid; grid-template-columns: minmax(120px, 1.1fr) minmax(140px, 2fr) 64px; column-gap: 14px; }
-  .bars .r { display: contents; }
-  .bars .r > * { padding: 7px 0; border-bottom: 1px solid var(--grid); }
-  .bars .r:last-child > * { border-bottom: 0; }
-  .bars .r:hover > *, .bars .r:focus-within > * { background: var(--flat-bg); }
-  .bars .name { font-size: 14px; min-width: 0; padding-left: 6px; }
-  .bars .name .sub { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .bars .track { position: relative; align-self: stretch; }
-  .bars .track::before { content: ""; position: absolute; left: 50%; top: 4px; bottom: 4px; width: 1px; background: var(--axis); }
-  .bars .bar { position: absolute; top: 50%; height: 14px; transform: translateY(-50%); }
-  .bars .bar.pos { left: 50%; background: var(--pos); border-radius: 0 4px 4px 0; }
-  .bars .bar.neg { right: 50%; background: var(--neg); border-radius: 4px 0 0 4px; }
-  .bars .val { display: flex; align-items: center; justify-content: flex-end; text-align: right; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; padding-right: 6px; }
-  .bars .val.neg { color: var(--ink-2); }
-  .bars .hd { font-size: 12px; color: var(--muted); font-weight: 500; padding: 0 0 6px; border-bottom: 1px solid var(--grid); }
-  .bars .hd.c { text-align: center; }
-  .bars .hd.v { text-align: right; padding-right: 6px; }
-  .bars .hd.n { padding-left: 6px; }
-  .drill-foot { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .drill .close { appearance: none; border: 1px solid var(--border); background: none; color: var(--ink-2); font: inherit;
+                  font-size: 13px; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 12px; }
+  .chips button { appearance: none; border: 1px solid var(--border); background: none; color: var(--ink-2); font: inherit; font-size: 13px;
+                  padding: 5px 11px; border-radius: 999px; cursor: pointer; }
+  .chips button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+
+  /* Stock */
+  .st { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .st.risk span { color: var(--crit); }
+  .st.over span { color: var(--warn); }
+  .st.ok { color: var(--muted); font-weight: 500; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--grid); }
+  .list li:last-child { border-bottom: 0; }
+  .list .n { font-size: 14px; font-weight: 600; }
+  .list .n .sub { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+  .list .w { text-align: right; font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .list .w .sub { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+  .linkbtn { appearance: none; border: 0; background: none; color: var(--accent); font: inherit; font-size: 13.5px; padding: 0; cursor: pointer; margin-top: 10px; }
+  .linkbtn:hover { text-decoration: underline; }
+
+  .grid4 { display: grid; gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  table.inv { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  table.inv th, table.inv td { padding: 7px 8px; border-bottom: 1px solid var(--grid); text-align: left; white-space: nowrap; vertical-align: middle; }
+  table.inv thead th { font-size: 12px; font-weight: 500; color: var(--muted); }
+  table.inv th[scope="row"] { font-weight: 500; }
+  table.inv .num { text-align: right; }
+  table.inv .strong { font-weight: 700; }
+  table.inv .muted { color: var(--muted); }
+  table.inv tbody tr:hover { background: var(--flat-bg); }
+  table.inv tr.risk .strong { color: var(--crit-text); }
+  .spark { display: block; overflow: visible; }
+
+  details.method { margin-top: 32px; font-size: 13px; color: var(--ink-2); }
+  details.method summary { cursor: pointer; font-weight: 600; }
+  details.method ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); }
+  details.method li { margin: 5px 0; }
+  .src { margin-top: 20px; font-size: 12px; color: var(--muted); }
   .tip { position: fixed; z-index: 10; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border);
-         box-shadow: 0 4px 16px rgba(0,0,0,0.12); border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.35; max-width: 260px; }
+         box-shadow: 0 4px 16px rgba(0,0,0,0.12); border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.35; max-width: 280px; }
   .tip[hidden] { display: none; }
   .tip strong { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
   .tip span { color: var(--ink-2); }
+
   @media (max-width: 760px) {
-    .bars { grid-template-columns: minmax(0, 1.3fr) minmax(90px, 1fr) 56px; column-gap: 8px; }
-  }
-  .notes { margin-top: 18px; padding: 0; list-style: none; color: var(--muted); font-size: 12.5px; }
-  .notes li { margin: 4px 0; }
-  .src { margin-top: 28px; font-size: 12px; color: var(--muted); }
-  @media (max-width: 760px) {
-    .grid, .grid.two { grid-template-columns: 1fr; }
-    .card .value { font-size: 30px; }
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .kpi.hero { grid-column: 1 / -1; }
+    .kpi.hero .value { font-size: 36px; }
+    .two, .grid4 { grid-template-columns: 1fr 1fr; }
+    .two { grid-template-columns: 1fr; }
+    .answer { font-size: 16px; }
+    .rows { grid-template-columns: minmax(0, 1.4fr) minmax(70px, 1fr) minmax(64px, auto); column-gap: 8px; }
+    .rows.with-stock { grid-template-columns: minmax(0, 1.4fr) minmax(60px, 1fr) minmax(64px, auto); }
+    .rows.with-stock .stock, .rows.with-stock .hd.s { display: none; }
   }
 </style>
 </head>
@@ -147,162 +298,189 @@
   </header>
 
   <nav role="tablist" aria-label="Pages">
-    <button role="tab" id="tab-flash" aria-controls="page-flash" data-page="flash">Sales flash</button>
-    <button role="tab" id="tab-customers" aria-controls="page-customers" data-page="customers">Customers</button>
+    <button role="tab" id="tab-overview" aria-controls="page-overview" data-page="overview">Overview</button>
+    <button role="tab" id="tab-stock" aria-controls="page-stock" data-page="stock">All stock</button>
+    <button role="tab" id="tab-ask" aria-controls="page-ask" data-page="ask">Ask the data</button>
   </nav>
 
-  <section id="page-flash" role="tabpanel" aria-labelledby="tab-flash">
-    <h2>Net sales (demand, USD after discounts)</h2>
-    <div class="grid" id="flash"></div>
-    <div class="drill" id="drill" hidden aria-live="polite">
-      <div class="drill-head">
-        <div class="drill-title" id="drill-title"></div>
-        <button class="drill-close" id="drill-close" type="button">Close</button>
+  <section id="page-overview" role="tabpanel" aria-labelledby="tab-overview">
+
+    <div class="block brief" id="b-brief" aria-labelledby="brief-title">
+      <div class="brief-head">
+        <h2 class="q" id="brief-title">This week's brief</h2>
+        <span class="badge" id="brief-badge"></span>
       </div>
-      <div class="seg" id="drill-dims" role="group" aria-label="Break down by"></div>
-      <div class="bars" id="drill-bars"></div>
-      <div class="drill-foot" id="drill-foot"></div>
+      <p class="brief-headline" id="brief-headline"></p>
+      <div class="brief-grid" id="brief-body"></div>
+      <div class="brief-foot" id="brief-foot"></div>
     </div>
-    <div class="tip" id="tip" hidden></div>
-    <ul class="notes">
-      <li>LY is matched on fiscal week and weekday (for example, Wed of W30 vs Wed of W30), not on calendar date.</li>
-      <li>No YoY at day level: about 35 transactions a day in this sample, so a single-day comparison is mostly noise.</li>
-      <li>Period to date starts at W23, the first week in the extract. A full fiscal YTD would need W1–W22.</li>
-      <li>"Where it came from" splits the YoY into percentage points: (TY − LY sales of a segment) ÷ total LY sales. Gen Z and new customers overlap, so the split uses both at once; the four cells add up to the YoY (±0.1 pp rounding). A negative cell means that segment sold less than LY. Week-to-date segments are small, so read them as directional.</li>
-    </ul>
+
+    <div class="block opp" id="b-opp">
+      <div class="brief-head">
+        <h2 class="q" style="margin:0">Growth opportunity</h2>
+        <span class="badge" id="opp-badge"></span>
+      </div>
+      <div class="opp-start" id="opp-start">
+        <button type="button" class="opp-btn" id="opp-show">Show this week's growth opportunity</button>
+        <p class="hint">Computed weekly from the data: a rule picks the opportunity, AI explains it.</p>
+      </div>
+      <div id="opp-card" hidden>
+        <p class="brief-headline" id="opp-headline"></p>
+        <div class="opp-grid" id="opp-body"></div>
+        <details class="why" id="opp-why"></details>
+      </div>
+    </div>
+
+    <div class="block" id="b-performance">
+      <h2 class="q">Trend</h2>
+      <div class="kpis" id="kpis"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Sales by week, this year vs last year</div>
+            <div class="panel-sub">The number under each week is its change vs the same week last year; the unfinished week is compared on the same days</div>
+          </div>
+          <div class="legend" aria-hidden="true">
+            <span><svg width="22" height="10"><line x1="1" y1="5" x2="21" y2="5" class="ln ty"/></svg>This year</span>
+            <span><svg width="22" height="10"><line x1="1" y1="5" x2="21" y2="5" class="ln ly"/></svg>Last year</span>
+            <span><svg width="22" height="12"><circle cx="6" cy="6" r="4" class="pt partial"/><circle cx="16" cy="6" r="4" class="pt partial-ly"/></svg>Week not finished, same days both years</span>
+          </div>
+        </div>
+        <div id="trend" class="chart"></div>
+        <details class="table"><summary>Show as table</summary><div class="scroll"><table id="trend-table"></table></div></details>
+      </div>
+    </div>
+
+    <div class="block" id="b-customers">
+      <h2 class="q">By customer age group</h2>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Change in sales by customer group</div>
+          </div>
+          <div class="controls">
+            <div class="seg" role="group" aria-label="Period" id="wf-period"></div>
+            <div class="seg" role="group" aria-label="Detail" id="wf-detail"></div>
+          </div>
+        </div>
+        <div class="rows" id="waterfall"></div>
+        <div class="facts" id="cust-facts"></div>
+        <div class="hint">Click a customer group to see where its change came from.</div>
+      </div>
+      <div class="panel drill" id="drill" hidden aria-live="polite">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title" id="drill-title"></div>
+            <div class="panel-sub" id="drill-sub"></div>
+          </div>
+          <button class="close" id="drill-close" type="button">Close</button>
+        </div>
+        <div class="chips" id="drill-dims" role="group" aria-label="Break down by"></div>
+        <div class="rows" id="drill-rows"></div>
+        <div class="note" id="drill-foot"></div>
+      </div>
+    </div>
+
+    <div class="block" id="b-products">
+      <h2 class="q">By product family</h2>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Change in sales by product family</div>
+          </div>
+        </div>
+        <div class="rows with-stock" id="products"></div>
+        <button class="more" id="prod-more" type="button"></button>
+      </div>
+    </div>
+
+    <div class="block" id="b-stock">
+      <h2 class="q">Stock insight</h2>
+      <div class="two">
+        <div class="panel">
+          <div class="panel-title">Could run out</div>
+          <ul class="list" id="risk-list"></ul>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Too much stock</div>
+          <ul class="list" id="over-list"></ul>
+        </div>
+      </div>
+      <button class="linkbtn" type="button" data-goto="stock">See every product family →</button>
+    </div>
   </section>
 
-  <section id="page-customers" role="tabpanel" aria-labelledby="tab-customers" hidden>
-    <div class="grid two" id="customers"></div>
-    <ul class="notes">
-      <li>New = first-ever purchase with the brand; repeat = Retained or Reactivated, both from COHORT_STATUS at the time of purchase.</li>
-      <li>Counts are distinct customers in the window. Share changes are in percentage points (pp).</li>
-      <li id="small-base-note"></li>
-    </ul>
+  <section id="page-stock" role="tabpanel" aria-labelledby="tab-stock" hidden>
+    <div class="block" style="margin-top:20px">
+      <div class="brief" id="b-sbrief" style="margin: 0 0 24px">
+        <div class="brief-head">
+          <h2 class="q" style="margin:0">Stock brief</h2>
+          <span class="badge" id="sbrief-badge"></span>
+        </div>
+        <p class="brief-headline" id="sbrief-headline"></p>
+        <div class="brief-grid" id="sbrief-body"></div>
+        <div class="brief-foot" id="sbrief-foot"></div>
+      </div>
+      <h2 class="q">Stock by product family</h2>
+      <div class="grid4" id="stock-kpis"></div>
+      <div class="panel" style="margin-top:12px">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Weeks of stock left, least to most</div>
+            <div class="panel-sub" id="stock-sub"></div>
+          </div>
+          <div class="legend" aria-hidden="true">
+            <span><svg width="22" height="10"><line x1="1" y1="5" x2="21" y2="5" class="ln ty"/></svg>Stock this year</span>
+            <span><svg width="22" height="10"><line x1="1" y1="5" x2="21" y2="5" class="ln ly"/></svg>Last year</span>
+          </div>
+        </div>
+        <div class="scroll"><table class="inv" id="stock-table"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="page-ask" role="tabpanel" aria-labelledby="tab-ask" hidden>
+    <div class="block" style="margin-top:20px">
+      <div class="brief-head">
+        <h2 class="q" style="margin:0">Ask the data</h2>
+        <span class="badge">Prototype · recorded answers</span>
+      </div>
+      <div class="chat-log" id="chat-log"></div>
+      <form class="chat-form" id="chat-form" autocomplete="off">
+        <input id="chat-input" type="text" placeholder="Ask a question…" aria-label="Your question">
+        <button type="submit">Ask</button>
+      </form>
+    </div>
   </section>
 
   <div class="src" id="src"></div>
+  <div class="tip" id="tip" hidden></div>
 </div>
 
 <script>
 const DATA = /*__DATA__*/null;
+const M = DATA.meta;
 
+/* ---------- formatting ---------- */
 const money = v => '$' + Math.round(v).toLocaleString('en-US');
 const int = v => Math.round(v).toLocaleString('en-US');
-const pct = (v, d = 1) => (v * 100).toFixed(d) + '%';
+const usdK = v => { const a = Math.abs(v); return a >= 1000 ? '$' + (a / 1000).toFixed(1) + 'K' : '$' + Math.round(a); };
+const signedUsd = v => (v >= 0 ? '+' : '−') + usdK(v);
+const signedPct = (v, d = 0) => v === null || v === undefined ? '–' : `${v > 0 ? '+' : v < 0 ? '−' : '±'}${Math.abs(v * 100).toFixed(d)}%`;
+const wks = v => v === null || v === undefined ? '–' : v.toFixed(1);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const SEG = M.segment_names;
+const PERIOD = {ptd: `Since ${M.period_start}`, wtd: 'This week so far'};
 
-// A signed change chip. kind: 'pct' (relative), 'pp' (share points), 'abs' (count difference).
-function delta(value, kind, {neutral = false, suffix = 'YoY'} = {}) {
-  if (value === null || value === undefined) return '';
-  const eps = kind === 'pp' ? 0.0005 : kind === 'abs' ? 0 : 0.0005;
-  const dir = Math.abs(value) <= eps ? 'flat' : value > 0 ? 'up' : 'down';
-  const cls = neutral ? 'flat' : dir;
+function delta(v, {neutral = false, suffix = 'vs last year', digits = 1} = {}) {
+  if (v === null || v === undefined) return '';
+  const dir = Math.abs(v) < 0.0005 ? 'flat' : v > 0 ? 'up' : 'down';
   const arrow = dir === 'up' ? '▲' : dir === 'down' ? '▼' : '■';
-  const sign = value > 0 ? '+' : value < 0 ? '−' : '±';
-  const mag = Math.abs(value);
-  const text = kind === 'pct' ? (mag * 100).toFixed(1) + '%'
-             : kind === 'pp' ? (mag * 100).toFixed(1) + ' pp'
-             : int(mag);
-  return `<span class="delta ${cls}"><span aria-hidden="true">${arrow}</span>${sign}${text} ${suffix}</span>`;
+  return `<span class="delta ${neutral ? 'flat' : dir}"><span aria-hidden="true">${arrow}</span>${signedPct(v, digits)} ${suffix}</span>`;
 }
 
-// Percent change unless the LY base is too small to make a percentage meaningful.
-function countDelta(c) {
-  if (c.ly === null || c.ly === undefined) return '';
-  return c.ly < DATA.meta.small_base ? delta(c.diff, 'abs', {suffix: 'vs LY'}) : delta(c.yoy, 'pct');
-}
-
-// 2x2 split of the YoY change in percentage points; row totals answer "how much from Gen Z",
-// column totals "how much from new customers", and the corner is the YoY itself.
-const pp = v => `${v > 0 ? '+' : v < 0 ? '−' : '±'}${Math.abs(v * 100).toFixed(1)}`;
-const SEG_LABEL = {
-  gen_z_new: 'Gen Z × New', gen_z_repeat: 'Gen Z × Repeat', other_new: 'Other × New', other_repeat: 'Other × Repeat',
-  gen_z: 'Gen Z (new + repeat)', other: 'Other generations', new: 'New customers', repeat: 'Repeat customers', all: 'All customers',
-};
-const PERIOD_LABEL = {wtd: 'Week to date', ptd: 'Period to date'};
-
-// Every number in the 2x2 is a button that opens its drill-down; values come from the precomputed drill data.
-function decomp(w, period) {
-  const d = w.drill;
-  const cells = ['gen_z_new', 'gen_z_repeat', 'other_new', 'other_repeat'];
-  const top = cells.reduce((a, b) => (d[b].pp > d[a].pp ? b : a));
-  const btn = seg => `<button type="button" class="cellbtn" data-period="${period}" data-seg="${seg}"
-      aria-pressed="false" aria-label="Drill into ${SEG_LABEL[seg]}, ${PERIOD_LABEL[period]}: ${pp(d[seg].pp)} points">${pp(d[seg].pp)}</button>`;
-  const td = (seg, cls = '') => `<td class="${cls}${d[seg].pp < 0 ? ' neg' : ''}${seg === top ? ' top' : ''}">${btn(seg)}</td>`;
-  return `<div class="decomp"><div class="cap">Where the ${pp(w.yoy)}% came from (pp)</div>
-    <table>
-      <thead><tr><td></td><th scope="col">New</th><th scope="col">Repeat</th><th scope="col" class="total">Total</th></tr></thead>
-      <tbody>
-        <tr><th scope="row">Gen Z</th>${td('gen_z_new')}${td('gen_z_repeat')}${td('gen_z', 'total')}</tr>
-        <tr><th scope="row">Other</th>${td('other_new')}${td('other_repeat')}${td('other', 'total')}</tr>
-        <tr class="total"><th scope="row">Total</th>${td('new')}${td('repeat')}${td('all', 'total')}</tr>
-      </tbody>
-    </table><div class="hint">Click any number to break it down</div></div>`;
-}
-
-const drillState = {period: 'ptd', seg: null, dim: 'GEO_REGION'};
-const shortName = (col, n) => col === 'PROD_CATEGORY' ? n.replace(/^\d+\./, '') : n;
-const compact = v => Math.abs(v) >= 1000 ? '$' + (v / 1000).toFixed(1) + 'K' : '$' + Math.round(v);
-
-function renderDrill() {
-  const panel = document.getElementById('drill');
-  document.querySelectorAll('.cellbtn').forEach(b =>
-    b.setAttribute('aria-pressed', String(b.dataset.period === drillState.period && b.dataset.seg === drillState.seg)));
-  if (!drillState.seg) { panel.hidden = true; return; }
-  const w = DATA.flash[drillState.period], seg = w.drill[drillState.seg];
-  const rows = seg.dims[drillState.dim];
-
-  const title = document.getElementById('drill-title');
-  title.textContent = '';
-  title.append(`${SEG_LABEL[drillState.seg]} · ${pp(seg.pp)} pp `);
-  const m = document.createElement('span'); m.className = 'muted';
-  m.textContent = `of ${pp(w.yoy)}% · ${PERIOD_LABEL[drillState.period]}`;
-  title.append(m);
-
-  const dims = document.getElementById('drill-dims');
-  dims.innerHTML = '';
-  Object.entries(DATA.meta.drill_dims).forEach(([col, label]) => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', String(col === drillState.dim));
-    b.addEventListener('click', () => { drillState.dim = col; renderDrill(); });
-    dims.append(b);
-  });
-
-  const max = Math.max(...rows.map(r => Math.abs(r.pp)), 1e-9);
-  const bars = document.getElementById('drill-bars');
-  bars.innerHTML = '<div class="hd n">' + esc(DATA.meta.drill_dims[drillState.dim]) +
-    '</div><div class="hd c">Contribution to YoY</div><div class="hd v">pp</div>';
-  rows.forEach(r => {
-    const row = document.createElement('div'); row.className = 'r'; row.tabIndex = 0;
-    const name = document.createElement('div'); name.className = 'name';
-    name.textContent = shortName(drillState.dim, r.name);
-    const sub = document.createElement('span'); sub.className = 'sub';
-    sub.textContent = `${compact(r.ty)} vs LY ${compact(r.ly)}`;
-    name.append(sub);
-    const track = document.createElement('div'); track.className = 'track';
-    const bar = document.createElement('div'); bar.className = 'bar ' + (r.pp >= 0 ? 'pos' : 'neg');
-    bar.style.width = (Math.abs(r.pp) / max * 50) + '%';
-    track.append(bar);
-    const val = document.createElement('div'); val.className = 'val' + (r.pp < 0 ? ' neg' : '');
-    val.textContent = pp(r.pp);
-    row.append(name, track, val);
-    const tipText = () => [`${pp(r.pp)} pp of YoY`,
-      `${shortName(drillState.dim, r.name)} · ${SEG_LABEL[drillState.seg]}`,
-      `${money(r.ty)} vs LY ${money(r.ly)} (${r.diff >= 0 ? '+' : '−'}${money(Math.abs(r.diff))})`];
-    row.addEventListener('pointermove', e => showTip(tipText(), e.clientX, e.clientY));
-    row.addEventListener('pointerleave', hideTip);
-    row.addEventListener('focus', () => { const b = row.querySelector('.track').getBoundingClientRect(); showTip(tipText(), b.left + b.width / 2, b.top); });
-    row.addEventListener('blur', hideTip);
-    bars.append(row);
-  });
-
-  const sum = rows.reduce((s, r) => s + r.pp, 0);
-  document.getElementById('drill-foot').textContent =
-    `Rows add up to ${pp(sum)} pp, the selected cell. Points are (TY − LY sales of the row) ÷ total LY sales of the period, so rows are comparable across cells.`;
-  panel.hidden = false;
-}
-
+/* ---------- tooltip ---------- */
 function showTip(lines, x, y) {
   const t = document.getElementById('tip');
   t.textContent = '';
@@ -310,82 +488,585 @@ function showTip(lines, x, y) {
   lines.slice(1).forEach(l => { const e = document.createElement('span'); e.textContent = l; t.append(e, document.createElement('br')); });
   t.hidden = false;
   const r = t.getBoundingClientRect();
-  t.style.left = Math.min(x + 12, window.innerWidth - r.width - 8) + 'px';
+  t.style.left = Math.max(8, Math.min(x + 12, window.innerWidth - r.width - 8)) + 'px';
   t.style.top = Math.max(8, y - r.height - 12) + 'px';
 }
 function hideTip() { document.getElementById('tip').hidden = true; }
-
-function renderFlash() {
-  const f = DATA.flash;
-  const y = f.yesterday;
-  const tile = (label, sub, body, foot = '', quiet = false) =>
-    `<article class="card${quiet ? ' quiet' : ''}"><div class="label">${label}</div><div class="sub">${esc(sub)}</div>${body}${foot ? `<div class="foot">${esc(foot)}</div>` : ''}</article>`;
-  const compared = (w, period) => `<div class="value">${money(w.ty)}</div>
-      <div class="row">${delta(w.yoy, 'pct')}<span>LY ${money(w.ly)}</span></div>${decomp(w, period)}`;
-  document.getElementById('flash').innerHTML =
-    tile('Yesterday', y.label,
-         `<div class="value">${money(y.ty)}</div><div class="row"><span>${int(y.transactions)} transactions</span></div>`,
-         'Day-level YoY not shown') +
-    tile('Week to date', DATA.flash.wtd.label, compared(f.wtd, 'wtd'), `${f.wtd.ty_range} vs ${f.wtd.ly_range}`) +
-    tile('Period to date', DATA.flash.ptd.label, compared(f.ptd, 'ptd'), `${f.ptd.ty_range} vs ${f.ptd.ly_range}`);
-  document.querySelectorAll('.cellbtn').forEach(b => b.addEventListener('click', () => {
-    const same = drillState.period === b.dataset.period && drillState.seg === b.dataset.seg;
-    Object.assign(drillState, {period: b.dataset.period, seg: same ? null : b.dataset.seg});
-    renderDrill();
-    if (!same) document.getElementById('drill').scrollIntoView({behavior: 'smooth', block: 'nearest'});
-  }));
-  document.getElementById('drill-close').addEventListener('click', () => { drillState.seg = null; renderDrill(); });
-  // Open on the largest contributor of the period, so the drill-down is visible on first load.
-  const cells = ['gen_z_new', 'gen_z_repeat', 'other_new', 'other_repeat'];
-  drillState.seg = cells.reduce((a, b) => (f.ptd.drill[b].pp > f.ptd.drill[a].pp ? b : a));
-  renderDrill();
+function hover(el, lines) {
+  el.addEventListener('pointermove', e => showTip(lines(), e.clientX, e.clientY));
+  el.addEventListener('pointerleave', hideTip);
+  el.addEventListener('focus', () => { const r = el.firstElementChild.getBoundingClientRect(); showTip(lines(), r.right, r.top); });
+  el.addEventListener('blur', hideTip);
 }
 
-function renderCustomers() {
-  const c = DATA.customers;
-  const periods = [['wtd', 'Week to date'], ['ptd', 'Period to date']];
+/* ---------- AI brief ---------- */
+// The model wrote placeholders, never numbers. Here the page re-checks that on every load and fills each
+// placeholder from the facts computed at build time; anything that fails is not shown.
+const PH = /\{([a-z0-9_]+)(\|abs)?\}/g;
+const KIND = {inference: 'Interpretation', hypothesis: 'Hypothesis', action: 'Suggestion', limit: 'Limit'};
 
-  const genz = periods.map(([k, name]) => {
-    const n = c.gen_z_new[k], s = c.gen_z_share_of_new[k];
-    return `<div><div class="period">${name}</div>
-      <div class="value">${int(n.ty)}</div>
-      <div class="row">${countDelta(n)}<span>LY ${int(n.ly)}</span></div>
-      <div class="note">${pct(s.ty, 0)} of all new customers (LY ${pct(s.ly, 0)})</div></div>`;
-  }).join('');
-
-  const repeat = periods.map(([k, name]) => {
-    const s = c.repeat_share[k], n = c.repeat_customers[k];
-    return `<div><div class="period">${name}</div>
-      <div class="value">${pct(s.ty)}</div>
-      <div class="row">${delta(s.diff, 'pp', {neutral: true})}<span>LY ${pct(s.ly)}</span></div>
-      <div class="note">${int(n.ty)} repeat customers (LY ${int(n.ly)}, ${n.yoy >= 0 ? '+' : '−'}${Math.abs(n.yoy * 100).toFixed(1)}%)</div></div>`;
-  }).join('');
-
-  // Explain a falling share when the repeat base itself held up: the denominator grew.
-  const p = c.repeat_share.ptd, pn = c.repeat_customers.ptd;
-  const mix = p.diff < 0 && Math.abs(pn.yoy) < 0.02
-    ? `<div class="callout">Share is down because new customers grew, not because repeat customers fell: the repeat count is roughly flat period to date.</div>` : '';
-
-  document.getElementById('customers').innerHTML =
-    `<article class="card"><div class="label">Gen Z new customers</div><div class="sub">First-ever purchase, Gen Z</div><div class="split">${genz}</div></article>` +
-    `<article class="card"><div class="label">Repeat customer share</div><div class="sub">Retained + Reactivated, share of all customers</div><div class="split">${repeat}</div>${mix}</article>`;
-  document.getElementById('small-base-note').textContent =
-    `When the LY count is under ${DATA.meta.small_base}, the change is shown as a difference in customers rather than a percentage.`;
+// Fills placeholders from pre-formatted facts and records anything that fails the browser re-check.
+function filler(facts, errors) {
+  let checked = 0;
+  const fill = (text, where) => {
+    const frag = document.createDocumentFragment();
+    if (/\d/.test(text.replace(PH, ''))) errors.push(`${where}: contains a number typed by hand`);
+    let last = 0;
+    for (const m of text.matchAll(PH)) {
+      frag.append(text.slice(last, m.index)); last = m.index + m[0].length;
+      const f = facts[m[1]];
+      if (!f) { errors.push(`${where}: unknown fact {${m[1]}}`); continue; }
+      const shown = m[2] ? f.abs_text : f.text;
+      if (shown === undefined) { errors.push(`${where}: {${m[1]}|abs} on a value that isn't negative`); continue; }
+      if (f.fmt === 'text') { frag.append(shown); continue; }
+      checked++;
+      const span = document.createElement('span'); span.className = 'fact'; span.tabIndex = 0; span.textContent = shown;
+      span.setAttribute('aria-label', `${shown}: ${f.label}`);
+      const tip = () => [shown, f.label, `From: ${f.source}`, `Fact id: ${m[1]}`];
+      span.addEventListener('pointermove', e => showTip(tip(), e.clientX, e.clientY));
+      span.addEventListener('pointerleave', hideTip);
+      span.addEventListener('focus', () => { const r = span.getBoundingClientRect(); showTip(tip(), r.left, r.top); });
+      span.addEventListener('blur', hideTip);
+      frag.append(span);
+    }
+    frag.append(text.slice(last));
+    return frag;
+  };
+  return {fill, checked: () => checked};
 }
 
+// Headline fragment plus one element per section.
+function briefParts(brief, fill) {
+  const head = fill(brief.headline, 'headline');
+  const secs = brief.sections.map((sec, i) => {
+    const el = document.createElement('section'); el.className = 'brief-sec';
+    const h = document.createElement('h3'); h.textContent = sec.title; el.append(h);
+    const ul = document.createElement('ul');
+    sec.items.forEach((it, j) => {
+      const li = document.createElement('li'); li.append(fill(it.text, `${sec.title} #${j + 1}`));
+      if (KIND[it.kind]) { const k = document.createElement('span'); k.className = 'kind'; k.textContent = KIND[it.kind]; li.append(k); }
+      ul.append(li);
+    });
+    el.append(ul);
+    return el;
+  });
+  return {head, secs};
+}
+
+function errorList(errors) {
+  const ul = document.createElement('ul'); ul.className = 'brief-errors';
+  errors.forEach(e => { const li = document.createElement('li'); li.textContent = e; ul.append(li); });
+  return ul;
+}
+
+function renderBrief(B, p, columns) {
+  const badge = document.getElementById(p + '-badge'), foot = document.getElementById(p + '-foot');
+  const head = document.getElementById(p + '-headline'), body = document.getElementById(p + '-body');
+  if (B.status === 'missing') {
+    badge.textContent = 'Not generated yet'; head.textContent = '';
+    foot.textContent = `Paste ai/prompt_input.txt into a chat model and save its JSON reply as ${B.file}, then rebuild.`;
+    return;
+  }
+  const errors = [...(B.verdict?.errors || [])];
+  const F = filler(B.facts, errors);
+  const {head: headFrag, secs} = briefParts(B.brief, F.fill);
+  if (B.status !== 'ok' || errors.length) {
+    badge.className = 'badge bad'; badge.textContent = 'Failed its check, not shown';
+    head.textContent = 'This AI-written section did not pass the fact check, so it is hidden.';
+    body.innerHTML = ''; body.append(errorList(errors));
+    foot.textContent = ''; return;
+  }
+  head.textContent = ''; head.append(headFrag);
+  body.innerHTML = '';
+  // columns[i] says which column section i goes in (0 = left, 1 = right, 2 = full width below both).
+  const left = document.createElement('div'), right = document.createElement('div'), full = document.createElement('div');
+  full.style.gridColumn = '1 / -1';
+  secs.forEach((el, i) => (columns?.[i] === 2 ? full : columns?.[i] ? right : left).append(el));
+  body.style.gridTemplateColumns = columns ? '' : '1fr';
+  body.append(...(columns ? [left, right] : [left]), ...(full.hasChildNodes() ? [full] : []));
+  badge.className = 'badge ok';
+  badge.innerHTML = `<span>AI-written</span>·<b>✓</b><span>${F.checked()} numbers checked</span>`;
+  foot.textContent = '';
+}
+
+/* ---------- Ask the data (chat prototype) ---------- */
+// Each recorded run: the tool calls Claude chose, their results (re-run at build time), and an answer written with
+// placeholders that may cite only those results. The page re-checks the answer before showing it.
+const C = DATA.chat;
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+
+function matchRun(q) {
+  const t = q.toLowerCase().trim();
+  let best = null, score = 0;
+  for (const r of C.runs) {
+    if (t === r.question.toLowerCase()) return r;
+    const s = r.keywords.filter(k => t.includes(k.toLowerCase())).length;
+    if (s > score) { best = r; score = s; }
+  }
+  return best;
+}
+
+function chipRow() {
+  const row = el('div', 'chips');
+  C.runs.forEach(r => {
+    const b = el('button', '', r.question); b.type = 'button';
+    b.addEventListener('click', () => ask(r.question));
+    row.append(b);
+  });
+  return row;
+}
+
+function table(columns, rows, wrapCol = -1) {
+  // Columns that are empty in every row (e.g. % change for a share) are left out.
+  const keep = columns.map((_, i) => i === 0 || rows.some(r => r[i] !== '–'));
+  const wrap = el('div', 'scroll'), t = el('table', 'mini'), tr = el('tr');
+  columns.forEach((c, i) => keep[i] && tr.append(el('th', i === wrapCol ? 'wrap' : '', c)));
+  t.append(tr);
+  rows.forEach(r => { const row = el('tr'); r.forEach((c, i) => keep[i] && row.append(el('td', i === wrapCol ? 'wrap' : '', c))); t.append(row); });
+  wrap.append(t); return wrap;
+}
+
+function rawAnswer(answer) {
+  const pre = el('pre', 'raw');
+  const add = text => {
+    let last = 0;
+    for (const m of text.matchAll(PH)) { pre.append(text.slice(last, m.index)); pre.append(el('span', 'ph', m[0])); last = m.index + m[0].length; }
+    pre.append(text.slice(last) + '\n');
+  };
+  add(answer.headline);
+  answer.sections.forEach(sec => { pre.append('\n' + sec.title + '\n'); sec.items.forEach(it => add(`[${it.kind}] ${it.text}`)); });
+  return pre;
+}
+
+function trace(run, browserErrors, checked) {
+  const d = el('details', 'trace');
+  d.append(el('summary', '', `Evidence trace · ${run.trace.length} tool calls · ${checked} numbers checked`));
+  const steps = el('ol', 'steps');
+
+  const s1 = el('li'); s1.append(el('h4', '', '1 · Claude chose the tools'));
+  s1.append(el('p', 'lead', `Claude saw the question and the tool list in ${C.prompt_file}, and asked for these calls. The build checked each call's arguments, then ran it on the data.`));
+  run.trace.forEach(c => {
+    const box = el('div', 'call'), h = el('div', 'call-head');
+    h.append(el('code', '', c.id), c.purpose); box.append(h, el('code', 'sig', c.signature), table(c.columns, c.rows));
+    s1.append(box);
+  });
+
+  const cited = [...new Set([run.answer.headline, ...run.answer.sections.flatMap(s => s.items.map(i => i.text))]
+    .flatMap(t => [...t.matchAll(PH)].map(m => m[1])))];
+  const s2 = el('li'); s2.append(el('h4', '', '2 · Claude wrote the answer with placeholders'));
+  s2.append(el('p', 'lead', 'This is the answer exactly as written. It contains no numbers; each placeholder names a tool result.'));
+  s2.append(rawAnswer(run.answer));
+  const rows = cited.filter(id => run.facts[id]).map(id => [`{${id}}`, run.facts[id].text, run.facts[id].label]);
+  const tw = table(['Placeholder', 'Value', 'What it is'], rows, 2);
+  tw.querySelectorAll('tr td:nth-child(1)').forEach(td => td.classList.add('mono'));
+  s2.append(el('p', 'lead', 'Values filled in:')); s2.append(tw);
+
+  const s3 = el('li'); s3.append(el('h4', '', '3 · Checks before it is shown'));
+  const ul = el('ul', 'checks');
+  const v = run.verdict, ok = v.passed && !browserErrors.length;
+  const line = (pass, text) => { const li = el('li'); li.append(el('span', pass ? 'ok' : 'no', pass ? '✓ ' : '✗ '), text); ul.append(li); };
+  line(v.passed || !v.errors.some(e => e.includes('tool call')), `Tool calls valid: every tool, measure, dimension and value exists (${run.trace.length} calls)`);
+  line(ok, `Every number comes from a tool result: ${checked} filled in, none typed by hand`);
+  line(v.passed, 'Words like "rose" or "fell" agree with the sign of each change');
+  line(v.passed, `Written for the current data (fingerprint ${M.fingerprint})`);
+  line(!browserErrors.length, 'Re-checked in your browser when this answer was shown');
+  s3.append(ul);
+  if (!ok) s3.append(errorList([...v.errors, ...browserErrors]));
+  s3.append(el('p', 'lead', 'Not checked: whether the reasoning between facts is right. Those sentences are labelled Interpretation or Suggestion.'));
+
+  steps.append(s1, s2, s3); d.append(steps);
+  return d;
+}
+
+function botMessage() {
+  const m = el('div', 'msg bot'), who = el('div', 'who');
+  who.append(el('span', '', 'Claude'));
+  m.append(who);
+  return {m, who};
+}
+
+function answerMessage(run) {
+  const {m, who} = botMessage();
+  const errors = [];
+  const F = filler(run.facts, errors);
+  const {head, secs} = briefParts(run.answer, F.fill);
+  if (run.status !== 'ok' || errors.length) {
+    const b = el('span', 'badge bad', 'Failed its check, not shown'); who.append(b);
+    m.append(el('p', 'plain', 'This answer did not pass the fact check, so it is hidden.'), errorList([...run.verdict.errors, ...errors]));
+    return m;
+  }
+  const badge = el('span', 'badge ok'); badge.innerHTML = `<span>AI-written</span>·<b>✓</b><span>${F.checked()} numbers checked</span>`;
+  who.append(badge);
+  const h = el('p', 'brief-headline'); h.append(head);
+  m.append(h, ...secs, trace(run, errors, F.checked()));
+  return m;
+}
+
+function ask(q) {
+  q = q.trim(); if (!q) return;
+  const log = document.getElementById('chat-log');
+  log.append(el('div', 'msg user', q));
+  const wait = el('div', 'msg wait', 'Checking the recorded answer…'); log.append(wait);
+  setTimeout(() => {
+    wait.remove();
+    const run = matchRun(q);
+    if (run) {
+      log.append(answerMessage(run));
+    } else {
+      const {m} = botMessage();
+      m.append(el('p', 'plain', 'This prototype has answers recorded for three questions only. A live model would answer anything else by choosing from the same tools, with the same checks. Try one of these:'), chipRow());
+      log.append(m);
+    }
+    log.lastElementChild.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }, 300);
+}
+
+function renderChat() {
+  const log = document.getElementById('chat-log');
+  const {m} = botMessage();
+  m.append(el('p', 'plain', 'Hi. Ask me about customers, products or stock. These three questions have recorded answers, shown below; click one to ask it again.'), chipRow());
+  log.append(m);
+  // Show the three recorded answers by default; their evidence traces stay closed.
+  C.runs.forEach(r => { log.append(el('div', 'msg user', r.question)); log.append(answerMessage(r)); });
+  document.getElementById('chat-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const i = document.getElementById('chat-input'); ask(i.value); i.value = '';
+  });
+}
+
+/* ---------- Growth opportunity ---------- */
+// A rule in core/opportunity.py picks the family; the model only explained it, citing the rule's own facts.
+function renderOpportunity() {
+  const O = DATA.opportunity, card = document.getElementById('opp-card');
+  if (O.status === 'none') { document.getElementById('opp-start').textContent = 'No family met the rule this week.'; return; }
+  const errors = [...(O.verdict?.errors || [])];
+  const F = filler(O.facts, errors);
+  const body = document.getElementById('opp-body'), head = document.getElementById('opp-headline');
+  if (O.status === 'ok') {
+    head.append(F.fill(O.card.headline, 'headline'));
+    O.card.sections.forEach(sec => {
+      const ul = el('ul');
+      sec.items.forEach((it, j) => {
+        const li = el('li'); li.append(F.fill(it.text, `${sec.title} #${j + 1}`));
+        if (KIND[it.kind]) li.append(el('span', 'kind', KIND[it.kind]));
+        ul.append(li);
+      });
+      body.append(el('h3', '', sec.title), ul);
+    });
+  }
+  const ok = O.status === 'ok' && !errors.length;
+  if (!ok) {
+    head.textContent = O.status === 'missing' ? 'No explanation recorded yet; the rule and its candidates are below.'
+                                              : 'The explanation failed its fact check, so it is hidden; the rule and its candidates are below.';
+    body.innerHTML = ''; if (errors.length) body.append(errorList(errors));
+  }
+  const why = document.getElementById('opp-why');
+  why.append(el('summary', '', 'How it was picked'), el('p', 'rule', `Target: ${O.target}. Rule: ${O.rule}`));
+  why.append(table(O.columns, O.rows));
+  const ul = el('ul', 'checks');
+  const line = (pass, text) => { const li = el('li'); li.append(el('span', pass ? 'ok' : 'no', pass ? '✓ ' : '✗ '), text); ul.append(li); };
+  line(ok, `Every number comes from the rule's own facts: ${F.checked()} filled in, none typed by hand`);
+  line(ok, 'The card is about the family the rule picked, written for the current data');
+  line(!errors.some(e => !O.verdict?.errors?.includes(e)), 'Re-checked in your browser when the card was shown');
+  why.append(el('p', 'rule', 'Checks:'), ul, el('p', 'rule', 'Not checked: whether the hypothesis is true. It is labelled Hypothesis and the suggested action is a test.'));
+  const badge = document.getElementById('opp-badge');
+  document.getElementById('opp-show').addEventListener('click', () => {
+    card.hidden = false; document.getElementById('opp-start').hidden = true;
+    badge.className = ok ? 'badge ok' : 'badge bad';
+    badge.innerHTML = ok ? `<span>Rule picks · AI explains</span>·<b>✓</b><span>${F.checked()} numbers checked</span>` : 'Explanation failed its check';
+  });
+}
+
+/* ---------- 1. How are we doing? ---------- */
+function renderPerformance() {
+  const f = DATA.flash, y = f.yesterday;
+  const days = `${DAYS[0]}–${DAYS[DATA.trend[DATA.trend.length - 1].days - 1]}`;
+  document.getElementById('kpis').innerHTML = `
+    <article class="kpi hero"><div class="label">Sales since ${esc(M.period_start)}</div>
+      <div class="sub">${esc(f.ptd.ty_range)}</div>
+      <div class="value">${money(f.ptd.ty)}</div>
+      <div class="row">${delta(f.ptd.yoy)}<span>Last year ${money(f.ptd.ly)}</span></div></article>
+    <article class="kpi"><div class="label">This week so far</div>
+      <div class="sub">${days}, ${esc(f.wtd.ty_range)}</div>
+      <div class="value">${money(f.wtd.ty)}</div>
+      <div class="row">${delta(f.wtd.vs_last_week.yoy, {suffix: 'vs last week'})}<span>Last week ${money(f.wtd.vs_last_week.ly)}</span></div>
+      <div class="row" style="margin-top:4px;font-size:12.5px;color:var(--muted)">Same days last week, ${esc(f.wtd.last_week_range)}</div></article>
+    <article class="kpi quiet"><div class="label">Yesterday</div>
+      <div class="sub">${esc(y.label)}</div>
+      <div class="value">${money(y.ty)}</div>
+      <div class="row"><span>${int(y.transactions)} orders</span></div></article>`;
+}
+
+function renderTrend() {
+  const rows = DATA.trend, box = document.getElementById('trend');
+  const W = Math.max(300, box.clientWidth), narrow = W < 560;
+  const H = narrow ? 230 : 260, m = {l: 46, r: narrow ? 58 : 72, t: 16, b: 46};
+  const iw = W - m.l - m.r, ih = H - m.t - m.b, n = rows.length;
+  const x = i => m.l + (i + 0.5) * (iw / n);
+  // An unfinished week is plotted against the same weekdays last year, never last year's full week.
+  const lyv = r => r.partial ? r.ly_same_days : r.ly;
+  const vals = rows.flatMap(r => [r.ty, lyv(r)]), step = 10000;
+  const lo = Math.floor(Math.min(...vals) / step) * step, hi = Math.ceil(Math.max(...vals) / step) * step;
+  const y = v => m.t + ih - (v - lo) / (hi - lo) * ih;
+  let g = '';
+  for (let v = lo; v <= hi + 1; v += step) {
+    g += `<line class="grid-line" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/>`;
+    g += `<text class="axis-text" x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">$${Math.round(v / 1000)}K</text>`;
+  }
+  const full = rows.map((r, i) => [r, i]).filter(([r]) => !r.partial);
+  const path = (pts, key) => pts.map(([r, i], k) => `${k ? 'L' : 'M'}${x(i).toFixed(1)},${y(r[key]).toFixed(1)}`).join('');
+  g += `<path class="ln ly" d="${path(full, 'ly')}"/><path class="ln ty" d="${path(full, 'ty')}"/>`;
+  rows.forEach((r, i) => {
+    g += `<circle class="pt ${r.partial ? 'partial-ly' : 'ly'}" cx="${x(i)}" cy="${y(lyv(r))}" r="${r.partial ? 4 : 3.5}"/>`;
+  });
+  rows.forEach((r, i) => {
+    if (r.partial) g += `<circle class="pt partial" cx="${x(i)}" cy="${y(r.ty)}" r="4.5"/><text class="partial-label" x="${x(i)}" y="${y(Math.max(r.ty, lyv(r))) - 10}" text-anchor="middle">${r.days} days</text>`;
+    else g += `<circle class="pt ty" cx="${x(i)}" cy="${y(r.ty)}" r="4.5"/>`;
+  });
+  const [lastFull, lastI] = full[full.length - 1], tyY = y(lastFull.ty), lyY = y(lastFull.ly);
+  g += `<text class="end-label ty" x="${x(lastI) + 9}" y="${tyY - 8}">This year</text>`;
+  g += `<text class="end-label ly" x="${x(lastI) + 9}" y="${lyY + (Math.abs(lyY - tyY) < 14 ? 16 : 4)}">Last year</text>`;
+  rows.forEach((r, i) => {
+    g += `<text class="axis-text" x="${x(i)}" y="${H - 26}" text-anchor="middle">W${r.wk}</text>`;
+    g += `<text class="yoy-text" x="${x(i)}" y="${H - 8}" text-anchor="middle">${signedPct(r.yoy)}</text>`;
+  });
+  g += `<line class="crosshair" id="trend-x" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" visibility="hidden"/>`;
+  g += `<rect id="trend-hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih + m.b}" fill="transparent"/>`;
+  box.innerHTML = `<svg class="${narrow ? 'narrow' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly sales this year vs last year, W${rows[0].wk} to W${rows[n - 1].wk}. Values are in the table below.">${g}</svg>`;
+  const hit = box.querySelector('#trend-hit'), cross = box.querySelector('#trend-x');
+  const tipFor = r => r.partial
+    ? [`${money(r.ty)} (${DAYS[0]}–${DAYS[r.days - 1]})`, `Week ${r.wk}, not finished`, `Same days last year ${money(r.ly_same_days)} · ${signedPct(r.yoy, 1)}`]
+    : [money(r.ty), `Week ${r.wk}`, `Last year ${money(r.ly)} · ${signedPct(r.yoy, 1)}` + (r.wow !== undefined ? ` · vs prior week ${signedPct(r.wow)} (last year ${signedPct(r.ly_wow)})` : '')];
+  hit.addEventListener('pointermove', e => {
+    const svg = box.querySelector('svg'), rect = svg.getBoundingClientRect();
+    const i = Math.max(0, Math.min(n - 1, Math.floor(((e.clientX - rect.left) * (W / rect.width) - m.l) / (iw / n))));
+    cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('visibility', 'visible');
+    showTip(tipFor(rows[i]), rect.left + x(i) * (rect.width / W), rect.top + m.t * (rect.height / H));
+  });
+  hit.addEventListener('pointerleave', () => { cross.setAttribute('visibility', 'hidden'); hideTip(); });
+  document.getElementById('trend-table').innerHTML =
+    '<thead><tr><th>Week</th><th>This year</th><th>Last year</th><th>Change</th><th>vs prior week</th></tr></thead><tbody>' +
+    rows.map(r => `<tr><td>W${r.wk}${r.partial ? ` (${r.days} days)` : ''}</td><td>${money(r.ty)}</td>
+      <td>${money(r.partial ? r.ly_same_days : r.ly)}${r.partial ? ' (same days)' : ''}</td><td>${signedPct(r.yoy, 1)}</td>
+      <td>${r.wow !== undefined ? signedPct(r.wow) : '–'}</td></tr>`).join('') + '</tbody>';
+}
+
+/* ---------- 2. Who is buying? (waterfall) ---------- */
+const wf = {period: 'ptd', detail: 'simple', sel: null, dim: 'GEO_REGION'};
+const SIMPLE = ['gen_z_new', 'gen_z_repeat', 'other_new', 'other_repeat'];
+const DETAILED = ['gen_z_new', 'gen_z_repeat', ...Object.keys(M.other_generations).flatMap(g => [g + '_new', g + '_repeat'])];
+
+function segButtons(id, options, current, onPick) {
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  options.forEach(([k, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', String(k === current));
+    b.addEventListener('click', () => onPick(k));
+    box.append(b);
+  });
+}
+
+function renderWaterfall() {
+  const w = DATA.flash[wf.period], d = w.drill, growth = w.ty - w.ly;
+  segButtons('wf-period', [['ptd', PERIOD.ptd], ['wtd', PERIOD.wtd]], wf.period, k => { wf.period = k; wf.sel = null; renderWaterfall(); renderDrill(); });
+  segButtons('wf-detail', [['simple', 'Gen Z vs others'], ['detailed', 'Every generation']], wf.detail, k => { wf.detail = k; wf.sel = null; renderWaterfall(); renderDrill(); });
+
+  // Each group's change drawn from a shared zero line: right = sold more than last year, left = sold less.
+  const steps = (wf.detail === 'simple' ? SIMPLE : DETAILED).map(k => ({k, ...d[k]})).sort((a, b) => b.diff - a.diff);
+  const max = Math.max(...steps.map(s => Math.abs(s.diff)), 1);
+
+  const box = document.getElementById('waterfall');
+  box.innerHTML = `<div class="hd n">Customer group</div><div class="hd"></div><div class="hd v">$ vs last year</div>`;
+  steps.forEach(s => {
+    const share = growth > 0 && s.diff > 0 ? s.diff / growth : null;
+    const r = document.createElement('div');
+    r.className = 'r click' + (s.k === wf.sel ? ' sel' : '');
+    const n = document.createElement('div'); n.className = 'name'; n.textContent = SEG[s.k];
+    const sub = document.createElement('span'); sub.className = 'sub'; sub.textContent = `${usdK(s.ty)} vs ${usdK(s.ly)}`; n.append(sub);
+    const t = document.createElement('div'); t.className = 'track';
+    const z = document.createElement('div'); z.className = 'zero'; z.style.left = '50%'; t.append(z);
+    const b = document.createElement('div'); b.className = 'bar ' + (s.diff >= 0 ? 'pos' : 'neg');
+    const wdt = Math.max(Math.abs(s.diff) / max * 50, 0.4);
+    b.style.width = wdt + '%'; b.style.left = s.diff >= 0 ? '50%' : (50 - wdt) + '%';
+    t.append(b);
+    const v = document.createElement('div'); v.className = 'val' + (s.diff < 0 ? ' neg' : ''); v.textContent = signedUsd(s.diff);
+    if (share !== null) { const e = document.createElement('span'); e.className = 'sub'; e.textContent = `${Math.round(share * 100)}% of growth`; v.append(e); }
+    r.append(n, t, v);
+    r.tabIndex = 0; r.setAttribute('role', 'button');
+    r.setAttribute('aria-label', `${SEG[s.k]}: ${signedUsd(s.diff)} vs last year. Show where this change came from.`);
+    const open = () => { wf.sel = wf.sel === s.k ? null : s.k; renderWaterfall(); renderDrill();
+                         if (wf.sel) document.getElementById('drill').scrollIntoView({behavior: 'smooth', block: 'nearest'}); };
+    r.addEventListener('click', open);
+    r.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    const part = growth > 0
+      ? (s.diff >= 0 ? `${Math.round(s.diff / growth * 100)}% of the total growth (${signedUsd(growth)})`
+                     : `Took back ${Math.round(-s.diff / growth * 100)}% of the total growth (${signedUsd(growth)})`)
+      : `Total change ${signedUsd(growth)}`;
+    hover(r, () => [signedUsd(s.diff), `${SEG[s.k]} · ${PERIOD[wf.period]}`,
+                    `${money(s.ty)} vs ${money(s.ly)} last year (${signedPct(s.yoy)})`, part]);
+    box.append(r);
+  });
+
+  const c = DATA.customers, p = wf.period;
+  document.getElementById('cust-facts').innerHTML =
+    `<span>First-time Gen Z customers <b>${int(c.gen_z_new[p].ty)}</b> (last year ${int(c.gen_z_new[p].ly)})</span>` +
+    `<span>All first-time customers <b>${int(c.new_customers[p].ty)}</b> (last year ${int(c.new_customers[p].ly)})</span>` +
+    `<span>Returning customers <b>${int(c.repeat_customers[p].ty)}</b> (last year ${int(c.repeat_customers[p].ly)})</span>`;
+}
+
+/* Drill: where one customer group's dollar change came from */
+function renderDrill() {
+  const panel = document.getElementById('drill');
+  if (!wf.sel) { panel.hidden = true; return; }
+  const w = DATA.flash[wf.period], s = w.drill[wf.sel];
+  document.getElementById('drill-title').textContent = `${SEG[wf.sel]}: ${signedUsd(s.diff)} vs last year`;
+  document.getElementById('drill-sub').textContent = `${PERIOD[wf.period]} · ${money(s.ty)} this year vs ${money(s.ly)} last year`;
+  const chips = document.getElementById('drill-dims');
+  chips.innerHTML = '';
+  Object.entries(M.drill_dims).forEach(([col, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', String(col === wf.dim));
+    b.addEventListener('click', () => { wf.dim = col; renderDrill(); });
+    chips.append(b);
+  });
+  const rows = [...s.dims[wf.dim]].sort((a, b) => b.diff - a.diff);
+  const max = Math.max(...rows.map(r => Math.abs(r.diff)), 1);
+  const box = document.getElementById('drill-rows');
+  box.innerHTML = `<div class="hd n">${esc(M.drill_dims[wf.dim])}</div><div class="hd"></div><div class="hd v">$ vs last year</div>`;
+  rows.forEach(r => box.append(barRow({
+    name: wf.dim === 'PROD_CATEGORY' ? r.name.replace(/^\d+\./, '') : r.name,
+    sub: `${usdK(r.ty)} vs ${usdK(r.ly)}`, value: r.diff, max,
+    tip: () => [signedUsd(r.diff), `${r.name} · ${SEG[wf.sel]}`, `${money(r.ty)} vs ${money(r.ly)} last year (${signedPct(r.yoy)})`]})));
+  document.getElementById('drill-foot').textContent = `Rows add up to ${signedUsd(rows.reduce((t, r) => t + r.diff, 0))}, the change for this group.`;
+  panel.hidden = false;
+}
+
+// A diverging bar row around zero: label | bar | value (+ optional extra cell).
+function barRow({name, tag, sub, value, max, tip, extra}) {
+  const r = document.createElement('div'); r.className = 'r'; r.tabIndex = 0;
+  const n = document.createElement('div'); n.className = 'name'; n.textContent = name;
+  if (tag) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = tag; n.append(t); }
+  if (sub) { const s = document.createElement('span'); s.className = 'sub'; s.textContent = sub; n.append(s); }
+  const t = document.createElement('div'); t.className = 'track';
+  const z = document.createElement('div'); z.className = 'zero'; z.style.left = '50%'; t.append(z);
+  const b = document.createElement('div'); b.className = 'bar ' + (value >= 0 ? 'pos' : 'neg');
+  const wdt = Math.abs(value) / max * 50;
+  b.style.width = wdt + '%'; b.style.left = value >= 0 ? '50%' : (50 - wdt) + '%';
+  t.append(b);
+  const v = document.createElement('div'); v.className = 'val' + (value < 0 ? ' neg' : ''); v.textContent = signedUsd(value);
+  r.append(n, t, v);
+  if (extra !== undefined) { const e = document.createElement('div'); e.className = 'stock'; e.innerHTML = extra; r.append(e); }
+  hover(r, tip);
+  return r;
+}
+
+/* ---------- 3. What's selling? ---------- */
+const STATUS = {
+  risk:      {label: 'Could run out', icon: '▲', cls: 'risk'},
+  overstock: {label: 'Too much stock', icon: '■', cls: 'over'},
+  ok:        {label: 'OK', icon: '', cls: 'ok'},
+  no_sales:  {label: 'No sales', icon: '–', cls: 'ok'},
+};
+const chip = (st, text) => `<span class="st ${STATUS[st].cls}">${STATUS[st].icon ? `<span aria-hidden="true">${STATUS[st].icon}</span>` : ''}${esc(text || STATUS[st].label)}</span>`;
+let showAllProducts = false;
+
+function renderProducts() {
+  const all = DATA.products, ups = all.filter(r => r.diff > 0), downs = all.filter(r => r.diff < 0);
+  const rows = showAllProducts ? all : [...ups.slice(0, 5), ...downs.slice(-3)];
+  const max = Math.max(...all.map(r => Math.abs(r.diff)), 1);
+  const box = document.getElementById('products');
+  box.innerHTML = `<div class="hd n">Product family</div><div class="hd"></div><div class="hd v">$ vs last year</div><div class="hd s">Stock left</div>`;
+  rows.forEach((r, i) => {
+    if (!showAllProducts && i === Math.min(5, ups.length) && downs.length) {
+      const g = document.createElement('div'); g.style.cssText = 'grid-column: 1 / -1; height: 10px'; box.append(g);
+    }
+    box.append(barRow({name: r.name, tag: r.prod_type, sub: `${usdK(r.ty)} vs ${usdK(r.ly)} (${signedPct(r.yoy)})`, value: r.diff, max,
+      extra: chip(r.status, `${wks(r.cover)} wks${r.status === 'ok' ? '' : ' · ' + STATUS[r.status].label.toLowerCase()}`),
+      tip: () => [signedUsd(r.diff), `${r.name} · ${r.prod_type}`, `${money(r.ty)} vs ${money(r.ly)} last year (${signedPct(r.yoy)})`,
+                  `${wks(r.cover)} weeks of stock left (last year ${wks(r.cover_ly)})`]}));
+  });
+  const btn = document.getElementById('prod-more');
+  btn.textContent = showAllProducts ? 'Show top and bottom only' : `Show all ${all.length} families`;
+  btn.onclick = () => { showAllProducts = !showAllProducts; renderProducts(); };
+}
+
+/* ---------- 4. Is stock in the right place? ---------- */
+function renderStockSummary() {
+  const v = DATA.inventory, th = v.thresholds;
+  const item = r => `<li><span class="n">${esc(r.name)}<span class="sub">${esc(r.prod_type)} · sales ${signedPct(r.sales.yoy)}</span></span>
+      <span class="w">${wks(r.ty.cover)} wks<span class="sub">last year ${wks(r.ly.cover)}</span></span></li>`;
+  const risk = v.rows.filter(r => r.status === 'risk'), over = v.rows.filter(r => r.status === 'overstock').reverse();
+  document.getElementById('risk-list').innerHTML = risk.map(item).join('') || '<li>None</li>';
+  document.getElementById('over-list').innerHTML = over.map(item).join('') || '<li>None</li>';
+}
+
+/* ---------- All stock page ---------- */
+function spark(ty, ly, lo, hi) {
+  const w = 96, h = 28, p = 3, base = ty[0] || 1, span = hi - lo || 1;
+  ty = ty.map(v => v / base); ly = ly.map(v => v / base);
+  const X = i => p + i * (w - 2 * p) / (ty.length - 1), Y = v => h - p - (v - lo) / span * (h - 2 * p);
+  const d = arr => arr.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('');
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">
+    <path class="ln ly" d="${d(ly)}" style="stroke-width:1.5"/><path class="ln ty" d="${d(ty)}" style="stroke-width:1.75"/>
+    <circle class="pt ty" cx="${X(ty.length - 1)}" cy="${Y(ty[ty.length - 1])}" r="3"/></svg>`;
+}
+
+function renderStockPage() {
+  const v = DATA.inventory, t = v.total, th = v.thresholds, rw = v.rate_weeks;
+  const rateLabel = `weeks ${rw[0]}–${rw[rw.length - 1]}`;
+  const names = st => v.rows.filter(r => r.status === st).map(r => r.name);
+  const kpi = (label, sub, value, row) =>
+    `<article class="kpi"><div class="label">${label}</div><div class="sub">${esc(sub)}</div><div class="value">${value}</div><div class="row">${row}</div></article>`;
+  document.getElementById('stock-kpis').innerHTML =
+    kpi('Units in stock', `Latest count, week ${v.snapshot_week}`, int(t.ty.on_hand),
+        `${delta(t.ty.on_hand / t.ly.on_hand - 1, {neutral: true})}<span>Last year ${int(t.ly.on_hand)}</span>`) +
+    kpi('Weeks of stock left', 'All families, at the current pace', wks(t.ty.cover), `<span>Last year ${wks(t.ly.cover)}</span>`) +
+    kpi('Could run out', `Under ${th.risk} weeks`, String(names('risk').length), `<span>${esc(names('risk').join(', ') || 'None')}</span>`) +
+    kpi('Too much stock', `Over ${th.overstock} weeks`, String(names('overstock').length), `<span>${esc(names('overstock').join(', ') || 'None')}</span>`);
+  document.getElementById('stock-sub').textContent = `Stock at week ${v.snapshot_week} ÷ average units sold per week over ${rateLabel}`;
+  const allIdx = v.rows.flatMap(r => [...r.ty.series, ...r.ly.series].map(x => x / (r.ty.series[0] || 1)));
+  const lo = Math.min(...allIdx), hi = Math.max(...allIdx);
+  document.getElementById('stock-table').innerHTML =
+    `<thead><tr><th scope="col">Product family</th><th scope="col" class="num">Weeks left</th><th scope="col" class="num">Last year</th>
+      <th scope="col">Status</th><th scope="col" class="num">Units in stock</th><th scope="col" class="num">Sold per week</th>
+      <th scope="col" class="num">Sales change</th><th scope="col">Stock trend</th></tr></thead><tbody>` +
+    v.rows.map(r => `<tr class="${STATUS[r.status].cls}">
+      <th scope="row">${esc(r.name)}<span class="tag">${esc(r.prod_type)}</span></th>
+      <td class="num strong">${wks(r.ty.cover)}</td><td class="num muted">${wks(r.ly.cover)}</td>
+      <td>${chip(r.status)}</td>
+      <td class="num">${int(r.ty.on_hand)} <span class="muted">/ ${int(r.ly.on_hand)}</span></td>
+      <td class="num">${r.ty.rate.toFixed(1)} <span class="muted">/ ${r.ly.rate.toFixed(1)}</span></td>
+      <td class="num">${signedPct(r.sales.yoy)}</td><td>${spark(r.ty.series, r.ly.series, lo, hi)}</td></tr>`).join('') + '</tbody>';
+}
+
+/* ---------- page ---------- */
 function show(page) {
   document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.page === page)));
   document.querySelectorAll('section[role="tabpanel"]').forEach(s => { s.hidden = s.id !== 'page-' + page; });
+  if (page === 'overview') renderTrend();  // measured at zero width while hidden
 }
 
-const m = DATA.meta;
-document.getElementById('asof').innerHTML = `Data as of <b>${esc(m.as_of_label)}</b> · ${esc(m.fiscal)}`;
-document.getElementById('src').textContent = `Source ${m.source} · fingerprint ${m.fingerprint} · built ${m.built_at}`;
-renderFlash();
-renderCustomers();
-document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => { location.hash = b.dataset.page; }));
-window.addEventListener('hashchange', () => show(location.hash.slice(1) || 'flash'));
-show(['flash', 'customers'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'flash');
+document.getElementById('asof').innerHTML = `Data as of <b>${esc(M.as_of_label)}</b> · fiscal week ${esc(M.fiscal.split('W')[1])}`;
+document.getElementById('src').textContent = `Source ${M.source} · fingerprint ${M.fingerprint} · built ${M.built_at}`;
+renderBrief(DATA.brief, 'brief', [0, 1, 2]);          // happened | changed, observations below
+renderOpportunity();
+renderBrief(DATA.stock_brief, 'sbrief', [0, 0, 1, 1]); // shows · changed | observations · limits
+renderChat();
+renderPerformance();
+renderWaterfall();
+renderDrill();
+renderProducts();
+renderStockSummary();
+renderStockPage();
+document.getElementById('drill-close').addEventListener('click', () => { wf.sel = null; renderWaterfall(); renderDrill(); });
+document.querySelectorAll('nav button, [data-goto]').forEach(b => b.addEventListener('click', () => {
+  location.hash = b.dataset.page || b.dataset.goto; window.scrollTo({top: 0});
+}));
+window.addEventListener('hashchange', () => show(location.hash.slice(1) || 'overview'));
+let resizeTimer;
+window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderTrend, 120); });
+show(['overview', 'stock', 'ask'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview');
 </script>
 </body>
 </html>

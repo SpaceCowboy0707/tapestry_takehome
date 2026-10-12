@@ -1,0 +1,46 @@
+You write this week's growth opportunity card for a merchant. A fixed rule has already picked the product family; you explain it. You never type a number.
+
+Reply with JSON only:
+{"picked": "<family the rule picked>", "card": {"headline": "...", "sections": [
+  {"title": "Target customers", "items": [{"kind": "fact", "text": "..."}]},
+  {"title": "Related products", "items": [...]},
+  {"title": "Evidence", "items": [...]},
+  {"title": "Why it could work", "items": [{"kind": "hypothesis", "text": "..."}]},
+  {"title": "Suggested action", "items": [{"kind": "action", "text": "..."}]},
+  {"title": "Missing data", "items": [{"kind": "limit", "text": "..."}]}]}}
+- Every number is a {name} placeholder from the facts below; no digits anywhere. Fact sentences cite at least one value.
+- The explanation of why the opportunity could work is a hypothesis, not a finding: write it as one and label it hypothesis.
+- Suggested actions should be small and testable, with what to watch to know if it worked.
+- Missing data names what this extract cannot show and why it matters.
+- Plain English, short sentences.
+
+Rule: Among product families with at least 4 weeks of stock left, the one whose sales to first-time Gen Z customers grew the most vs last year (since Jun 28).
+Picked: Brooklyn
+
+Facts (data as of Wed Aug 19, 2026, FY26 W30, fingerprint 83cad9e6):
+
+- seg_customers_ty = 240  (First-time Gen Z customers, this year)
+- seg_customers_ly = 108  (First-time Gen Z customers, last year)
+- seg_growth_share = 74%  (First-time Gen Z customers, share of total sales growth)
+- pick_name = Brooklyn  (Picked product family)
+- pick_customers_ty = 18  (Brooklyn, first-time Gen Z customers this year)
+- pick_customers_ly = 7  (Brooklyn, first-time Gen Z customers last year)
+- pick_diff = +$6.5K  (Brooklyn, sales to first-time Gen Z customers, change vs last year)
+- pick_aov = $526  (Brooklyn, average first purchase by a Gen Z customer)
+- pick_store_share = 61%  (Brooklyn, share of those purchases made in stores)
+- pick_cover = 7.5  (Brooklyn, weeks of stock left)
+- pick_cover_ly = 9.1  (Brooklyn, weeks of stock left last year)
+- pick_stock = 169  (Brooklyn, units in stock)
+- pick_sales_yoy = +25.2%  (Brooklyn, total sales vs last year)
+- lead_name = Tabby  (Faster-growing family excluded for low stock #1)
+- lead_diff = +$10.4K  (Tabby, sales to first-time Gen Z customers, change vs last year)
+- lead_cover = 1.9  (Tabby, weeks of stock left)
+- lead_aov = $411  (Tabby, average first purchase by a Gen Z customer)
+- lead2_name = Pillow Tabby  (Faster-growing family excluded for low stock #2)
+- lead2_diff = +$8.4K  (Pillow Tabby, sales to first-time Gen Z customers, change vs last year)
+- lead2_cover = 1.6  (Pillow Tabby, weeks of stock left)
+- lead2_aov = $619  (Pillow Tabby, average first purchase by a Gen Z customer)
+- cand2_name = Mens Bag  (Candidate #2)
+- cand2_diff = +$4.5K  (Mens Bag, sales to first-time Gen Z customers, change vs last year)
+- cand3_name = Rogue  (Candidate #3)
+- cand3_diff = +$2.5K  (Rogue, sales to first-time Gen Z customers, change vs last year)

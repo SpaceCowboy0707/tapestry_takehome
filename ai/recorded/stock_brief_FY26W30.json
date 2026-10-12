@@ -1,0 +1,92 @@
+{
+  "model": "claude-opus-5-5 (Claude Code session; regenerated with the neutral-tone prompt)",
+  "generated_at": "2026-10-12 00:41",
+  "fingerprint": "83cad9e6",
+  "prompt_file": "ai/prompt_input_stock.txt",
+  "prompt_sha256": "d042def9d966",
+  "brief": {
+    "headline": "Weeks of stock left across all families are {cover_total} against {cover_total_ly} last year; {top1_name} and {top2_name} have under {risk_threshold} weeks left, and {over1_name}, {over2_name} and {over3_name} have more than {overstock_threshold}.",
+    "sections": [
+      {
+        "title": "What the stock data shows",
+        "items": [
+          {
+            "kind": "fact",
+            "text": "Across all families there are {stock_total} units in stock, {stock_total_change} vs last year, and {cover_total} weeks of stock left against {cover_total_ly} last year."
+          },
+          {
+            "kind": "fact",
+            "text": "Hero families have {hero_cover} weeks left against {hero_cover_ly} last year; Halo families have {halo_cover} against {halo_cover_ly}."
+          },
+          {
+            "kind": "fact",
+            "text": "{top1_name} sells {top1_rate} units a week against {top1_rate_ly} last year and has {top1_stock} units in stock against {top1_stock_ly}; {top2_name} sells {top2_rate} against {top2_rate_ly} and has {top2_stock} against {top2_stock_ly}."
+          },
+          {
+            "kind": "fact",
+            "text": "{over1_name}, {over2_name} and {over3_name} each have more than {overstock_threshold} weeks of stock; {over1_name} has {over1_cover} weeks against {over1_cover_ly} last year, and its sales are {over1_sales_yoy} vs last year."
+          },
+          {
+            "kind": "fact",
+            "text": "{watch_name} is under the {overstock_threshold}-week threshold, with sales {watch_sales_yoy} vs last year and {watch_cover} weeks of stock left against {watch_cover_ly}."
+          }
+        ]
+      },
+      {
+        "title": "What changed since last week",
+        "items": [
+          {
+            "kind": "fact",
+            "text": "Weeks of stock left fell from {top1_cover_prev} to {top1_cover} for {top1_name} and from {top2_cover_prev} to {top2_cover} for {top2_name}."
+          },
+          {
+            "kind": "fact",
+            "text": "{most_over_name} fell from {most_over_cover_prev} to {most_over_cover} weeks. Families that changed stock status: {status_changes}."
+          }
+        ]
+      },
+      {
+        "title": "Observations",
+        "items": [
+          {
+            "kind": "fact",
+            "text": "The all-family figure is close to last year, while single families range from {top2_cover} weeks ({top2_name}) to {over1_cover} ({over1_name})."
+          },
+          {
+            "kind": "fact",
+            "text": "{top1_name} and {top2_name}, the two families with the fewest weeks left, are also the top two by sales to first-time Gen Z customers ({genz_family1_diff} and {genz_family2_diff})."
+          },
+          {
+            "kind": "fact",
+            "text": "{over1_name}, {over2_name} and {over3_name} each hold more units than last year ({over1_stock}, {over2_stock} and {over3_stock}, against {over1_stock_ly}, {over2_stock_ly} and {over3_stock_ly}), and their sales vs last year are {over1_sales_yoy}, {over2_sales_yoy} and {over3_sales_yoy}."
+          }
+        ]
+      },
+      {
+        "title": "Limits of this analysis",
+        "items": [
+          {
+            "kind": "limit",
+            "text": "Weeks of stock left divides units in stock at week {snapshot_week} by the average weekly units sold in weeks {rate_week_first} to {rate_week_last}, and assumes the coming weeks sell at that pace."
+          },
+          {
+            "kind": "limit",
+            "text": "Sales in this extract look sampled: about {units_per_week_total} units sold per week against {stock_total} in stock, so the absolute weeks are likely overstated; the comparison with last year and the ranking between families are more reliable."
+          },
+          {
+            "kind": "limit",
+            "text": "Stock is one total for all stores and online, so this data cannot show stock by region or store, for example where Europe is {europe_yoy} and Greater China {china_yoy} vs last year."
+          },
+          {
+            "kind": "limit",
+            "text": "There is no information on incoming orders or supplier lead times, so a family flagged as at risk of running out may already have stock on the way."
+          },
+          {
+            "kind": "limit",
+            "text": "Season is not modelled: outerwear stock in August may include the fall delivery, and the {risk_threshold}- and {overstock_threshold}-week thresholds are placeholders to be set from lead times and the seasonal plan."
+          }
+        ]
+      }
+    ]
+  }
+}

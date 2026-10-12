@@ -1,0 +1,75 @@
+{
+  "model": "claude-opus-5-5 (Claude Code session; regenerated with the neutral-tone prompt)",
+  "generated_at": "2026-10-12 00:41",
+  "fingerprint": "83cad9e6",
+  "prompt_file": "ai/prompt_input.txt",
+  "prompt_sha256": "6914d7a21e6c",
+  "brief": {
+    "headline": "Sales since {period_start} are {yoy_ptd} vs last year; first-time Gen Z customers accounted for {genz_new_share} of the growth, and {top1_name} and {top2_name}, the two largest product gains, have under {risk_threshold} weeks of stock left.",
+    "sections": [
+      {
+        "title": "What happened",
+        "items": [
+          {
+            "kind": "fact",
+            "text": "Sales since {period_start} are {sales_ptd} against {sales_ptd_ly} on the same days last year ({yoy_ptd}); each week was ahead of the same week last year ({weeks_ahead} of {weeks_total})."
+          },
+          {
+            "kind": "fact",
+            "text": "First-time Gen Z customers rose from {genz_new_customers_ly} to {genz_new_customers}. Sales from them are {genz_new_diff} vs last year, {genz_new_share} of total growth; {genz_new_store_share} of that change was in stores."
+          },
+          {
+            "kind": "fact",
+            "text": "Returning Gen Z customers fell from {genz_repeat_customers_ly} to {genz_repeat_customers}, and sales from them are {genz_repeat_sales_yoy} vs last year ({genz_repeat_diff})."
+          },
+          {
+            "kind": "fact",
+            "text": "{top1_name} ({top1_diff}) and {top2_name} ({top2_diff}) had the largest product gains; women's apparel is {apparel_yoy} vs last year, and {overstock_names} each have more than {overstock_threshold} weeks of stock."
+          }
+        ]
+      },
+      {
+        "title": "What changed since last week",
+        "items": [
+          {
+            "kind": "fact",
+            "text": "This week so far is {wow} vs the same days last week and {wtd_yoy} vs the same days last year."
+          },
+          {
+            "kind": "fact",
+            "text": "Week {last_week_no} was {last_week_yoy} vs last year, against {prior_week_yoy} the week before."
+          },
+          {
+            "kind": "fact",
+            "text": "First-time Gen Z customers this week so far: {genz_new_wtd}, against {genz_new_last_week} on the same days last week."
+          },
+          {
+            "kind": "fact",
+            "text": "Weeks of stock left fell from {top1_cover_prev} to {top1_cover} for {top1_name} and from {top2_cover_prev} to {top2_cover} for {top2_name}; families that changed stock status since last week: {status_changes}."
+          }
+        ]
+      },
+      {
+        "title": "Observations",
+        "items": [
+          {
+            "kind": "fact",
+            "text": "The two largest product gains have the fewest weeks of stock left: {top1_name} {top1_cover} against {top1_cover_ly} last year, {top2_name} {top2_cover} against {top2_cover_ly}."
+          },
+          {
+            "kind": "fact",
+            "text": "{genz_family1_name} and {genz_family2_name} are also the top two families by sales to first-time Gen Z customers ({genz_family1_diff} and {genz_family2_diff})."
+          },
+          {
+            "kind": "fact",
+            "text": "The share of first-time Gen Z customers in Insider fell from {genz_new_insider_ly} to {genz_new_insider}; among returning customers it is {repeat_insider}."
+          },
+          {
+            "kind": "limit",
+            "text": "Most customers appear once in this extract, so returning customers are identified by their customer status, not by a measured repeat rate."
+          }
+        ]
+      }
+    ]
+  }
+}

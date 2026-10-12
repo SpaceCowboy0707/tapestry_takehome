@@ -43,6 +43,8 @@ def windows(df, ref):
                     label=f"W{wk} {DAY_NAMES[0]}–{DAY_NAMES[dow]}",
                     ty_range=(wtd_ty.TXN_DT.min(), wtd_ty.TXN_DT.max()),
                     ly_range=(wtd_ly.TXN_DT.min(), wtd_ly.TXN_DT.max())),
+        # Last week on the same weekdays, so a week in progress is never compared with a full week.
+        'last_week': dict(ty=ty[(ty.WK == wk - 1) & (ty.DOW <= dow)]),
         'ptd': dict(ty=to_date(ty), ly=to_date(ly),
                     label=f"W{first_wk}–W{wk} {DAY_NAMES[dow]}",
                     ty_range=(to_date(ty).TXN_DT.min(), to_date(ty).TXN_DT.max()),

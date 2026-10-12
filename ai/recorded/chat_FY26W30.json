@@ -1,0 +1,117 @@
+{
+  "model": "claude-opus-5-5 (Claude, in the Cowork session used to build this project)",
+  "generated_at": "2026-10-11",
+  "prompt_file": "ai/prompt_input_chat.txt",
+  "fingerprint": "83cad9e6",
+  "runs": [
+    {
+      "id": "insider_genz",
+      "question": "Does Insider membership help keep Gen Z customers?",
+      "keywords": ["insider", "member", "membership", "loyalty", "retain", "retention", "keep", "come back", "return", "会员", "留住", "留存", "回购", "忠诚"],
+      "calls": [
+        {"id": "c1", "tool": "breakdown", "purpose": "Compare how many Gen Z members and non-members are returning customers.",
+         "args": {"measure": "repeat_share", "by": "insider", "where": {"age_group": "Gen Z"}}},
+        {"id": "c2", "tool": "breakdown", "purpose": "Check whether the same gap shows up in the other generations.",
+         "args": {"measure": "repeat_share", "by": "insider", "where": {"age_group": ["Millennial", "Gen X", "Boomer"]}}},
+        {"id": "c3", "tool": "breakdown", "purpose": "See how many first-time and returning Gen Z customers are members.",
+         "args": {"measure": "insider_share", "by": "customer_type", "where": {"age_group": "Gen Z"}}},
+        {"id": "c4", "tool": "breakdown", "purpose": "Count first-time and returning Gen Z customers against last year.",
+         "args": {"measure": "customers", "by": "customer_type", "where": {"age_group": "Gen Z"}}}
+      ],
+      "answer": {
+        "headline": "Gen Z members are far more likely to be returning customers than non-members, but this data can't show that membership is what brings them back.",
+        "sections": [
+          {"title": "Answer", "items": [
+            {"kind": "fact", "text": "Among Gen Z customers, {c1_member_ty} of Insider members are returning customers, against {c1_non_member_ty} of non-members."},
+            {"kind": "fact", "text": "The other generations show the same pattern: {c2_member_ty} of members against {c2_non_member_ty} of non-members."},
+            {"kind": "fact", "text": "Only {c3_first_time_ty} of first-time Gen Z customers are members, down from {c3_first_time_ly} last year, while {c3_returning_ty} of returning Gen Z customers are."},
+            {"kind": "fact", "text": "First-time Gen Z customers rose from {c4_first_time_ly} to {c4_first_time_ty}, while returning Gen Z customers fell from {c4_returning_ly} to {c4_returning_ty}."}
+          ]},
+          {"title": "What it could mean", "items": [
+            {"kind": "inference", "text": "Membership is the strongest link to coming back that this data offers, and fewer first-time Gen Z customers are joining than last year, so sign-up is the lever to test first."},
+            {"kind": "action", "text": "A fair test: offer Insider sign-up at checkout in some stores and not in similar ones, then compare how many first-time Gen Z customers come back."}
+          ]},
+          {"title": "Keep in mind", "items": [
+            {"kind": "limit", "text": "Returning customers have had more time to join, so membership may follow loyalty rather than cause it."},
+            {"kind": "limit", "text": "Each customer appears about once in this data, so returning is read from the customer's status, not a measured repeat rate; the data also doesn't say whether the Insider flag means member at purchase or today."}
+          ]}
+        ]
+      }
+    },
+    {
+      "id": "genz_products",
+      "question": "Which products are bringing in Gen Z customers right now?",
+      "keywords": ["product", "products", "family", "families", "bringing in", "bring in", "attract", "attracting", "draw", "winning", "best", "产品", "吸引", "哪些", "商品", "款"],
+      "calls": [
+        {"id": "c1", "tool": "compare", "purpose": "Count first-time Gen Z customers against last year.",
+         "args": {"measure": "customers", "where": {"age_group": "Gen Z", "customer_type": "First-time"}}},
+        {"id": "c2", "tool": "breakdown", "purpose": "Find which product families first-time Gen Z customers bought most.",
+         "args": {"measure": "customers", "by": "product_family", "where": {"age_group": "Gen Z", "customer_type": "First-time"}, "top": 5}},
+        {"id": "c3", "tool": "breakdown", "purpose": "Rank product families by sales growth from first-time Gen Z customers.",
+         "args": {"measure": "net_sales", "by": "product_family", "where": {"age_group": "Gen Z", "customer_type": "First-time"}, "sort_by": "diff", "top": 5}},
+        {"id": "c4", "tool": "breakdown", "purpose": "Find the families where Gen Z makes up the largest share of buyers.",
+         "args": {"measure": "gen_z_share", "by": "product_family", "top": 5}},
+        {"id": "c5", "tool": "compare", "purpose": "Get the Gen Z share of all customers as a baseline.",
+         "args": {"measure": "gen_z_share"}},
+        {"id": "c6", "tool": "stock", "purpose": "Check how much stock the leading families have left.",
+         "args": {"families": ["Tabby", "Pillow Tabby", "Brooklyn"]}}
+      ],
+      "answer": {
+        "headline": "Tabby brings in the most first-time Gen Z customers, and Tabby, Pillow Tabby and Brooklyn added the most sales from them; Tabby and Pillow Tabby are low on stock.",
+        "sections": [
+          {"title": "Answer", "items": [
+            {"kind": "fact", "text": "First-time Gen Z customers rose from {c1_ly} to {c1_ty}."},
+            {"kind": "fact", "text": "Tabby drew the most of them, {c2_tabby_ty} against {c2_tabby_ly} last year, followed by Willow ({c2_willow_ty}) and Brooklyn ({c2_brooklyn_ty})."},
+            {"kind": "fact", "text": "By sales added from first-time Gen Z customers: Tabby {c3_tabby_diff}, Pillow Tabby {c3_pillow_tabby_diff} and Brooklyn {c3_brooklyn_diff}."},
+            {"kind": "fact", "text": "Gen Z makes up {c4_mens_bag_ty} of Mens Bag buyers and {c4_pillow_tabby_ty} of Pillow Tabby buyers, against {c5_ty} across all products."},
+            {"kind": "fact", "text": "Weeks of stock left: Tabby {c6_tabby_cover} against {c6_tabby_cover_ly} last year, Pillow Tabby {c6_pillow_tabby_cover}, Brooklyn {c6_brooklyn_cover}."}
+          ]},
+          {"title": "What it could mean", "items": [
+            {"kind": "inference", "text": "Tabby and Pillow Tabby are where Gen Z acquisition and stock risk overlap, so running out could slow the flow of new Gen Z customers."},
+            {"kind": "inference", "text": "Brooklyn is growing with first-time Gen Z customers and has more stock, which makes it a candidate to feature while Tabby is short."}
+          ]},
+          {"title": "Keep in mind", "items": [
+            {"kind": "limit", "text": "This shows what first-time Gen Z customers bought, not what brought them in; there is no traffic or campaign data."},
+            {"kind": "limit", "text": "Most families have only a few dozen first-time Gen Z customers, so a handful of orders can change the ranking, and Mens Bag is a small family."}
+          ]}
+        ]
+      }
+    },
+    {
+      "id": "aov_age",
+      "question": "Which age group spends more per order?",
+      "keywords": ["order", "per order", "aov", "basket", "spend", "spends", "spending", "ticket", "age group", "generation", "价钱", "单次", "客单价", "金额", "花", "年龄", "贵"],
+      "calls": [
+        {"id": "c1", "tool": "breakdown", "purpose": "Compare average order value across age groups, this year and last.",
+         "args": {"measure": "aov", "by": "age_group"}},
+        {"id": "c2", "tool": "order_value", "purpose": "Check whether the gaps between age groups are larger than normal variation.",
+         "args": {"by": "age_group"}},
+        {"id": "c3", "tool": "compare", "purpose": "Get the average order value of all customers as a baseline.",
+         "args": {"measure": "aov"}},
+        {"id": "c4", "tool": "breakdown", "purpose": "Compare full-price stores with outlets, to see how much the store type matters.",
+         "args": {"measure": "aov", "by": "store_type"}},
+        {"id": "c5", "tool": "breakdown", "purpose": "Split Gen Z orders into first-time and returning customers.",
+         "args": {"measure": "aov", "by": "customer_type", "where": {"age_group": "Gen Z"}}}
+      ],
+      "answer": {
+        "headline": "Gen Z spends the most per order, but only slightly more than Millennials; whether the order is at a full-price store or an outlet makes a much bigger difference.",
+        "sections": [
+          {"title": "Answer", "items": [
+            {"kind": "fact", "text": "Average order value is {c1_gen_z_ty} for Gen Z, {c1_millennial_ty} for Millennials, {c1_boomer_ty} for Boomers and {c1_gen_x_ty} for Gen X, against {c3_ty} for all customers."},
+            {"kind": "fact", "text": "The likely range is {c2_gen_z_low} to {c2_gen_z_high} for Gen Z and {c2_millennial_low} to {c2_millennial_high} for Millennials, so the two overlap."},
+            {"kind": "fact", "text": "Gen Z's average order is close to last year's {c1_gen_z_ly}, while Millennials' rose from {c1_millennial_ly} to {c1_millennial_ty}."},
+            {"kind": "fact", "text": "Orders at full-price stores average {c4_full_price_ty}, against {c4_outlet_ty} at outlets."},
+            {"kind": "fact", "text": "Within Gen Z, first-time customers spend {c5_first_time_ty} per order and returning customers {c5_returning_ty}, down from {c5_returning_ly} last year."}
+          ]},
+          {"title": "What it could mean", "items": [
+            {"kind": "inference", "text": "Age group on its own is a weak guide to order value; store type, and whether it is a customer's first purchase, explain more of the difference."}
+          ]},
+          {"title": "Keep in mind", "items": [
+            {"kind": "limit", "text": "Each order in this data is a single line with about one item, so order value mostly reflects the price of the item bought."},
+            {"kind": "limit", "text": "Order value is after discounts, and the data has no discount or margin detail."}
+          ]}
+        ]
+      }
+    }
+  ]
+}
