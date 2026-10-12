@@ -109,6 +109,43 @@ DRILL_DIMS = {
 }
 
 
+# Product family drill: where one family's change came from. Customer group uses the four groups of the 2x2 grid.
+FAMILY_DRILL_DIMS = {
+    'GEO_REGION':     'Region',
+    'CHANNEL_DETAIL': 'Store vs online',
+    'SALES_CHANNEL':  'Retail vs outlet',
+    'CUSTOMER_GROUP': 'Customer group',
+}
+
+
+def family_drill(window, key='net_sales'):
+    """For every product family, its change vs LY split by each FAMILY_DRILL_DIMS column; members add up to the family."""
+    fn = MEASURES[key]['fn']
+
+    def tagged(d):
+        d = d.copy()
+        d['CUSTOMER_GROUP'] = ''
+        for (age, cohort), mask in SEGMENTS.items():
+            d.loc[mask(d), 'CUSTOMER_GROUP'] = f'{age}_{cohort}'
+        return d
+
+    ty, ly = tagged(window['ty']), tagged(window['ly'])
+    out = {}
+    for fam in sorted(set(ty.STYLE_GROUP) | set(ly.STYLE_GROUP)):
+        st, sl = ty[ty.STYLE_GROUP == fam], ly[ly.STYLE_GROUP == fam]
+        dims = {}
+        for col in FAMILY_DRILL_DIMS:
+            names = sorted(set(st[col]) | set(sl[col]))
+            rows = []
+            for n in names:
+                a, b = fn(st[st[col] == n]), fn(sl[sl[col] == n])
+                rows.append(dict(name=n, ty=a, ly=b, diff=round(a - b, 2), yoy=(a / b - 1) if b else None))
+            rows.sort(key=lambda r: r['diff'], reverse=True)
+            dims[col] = rows
+        out[fam] = dims
+    return out
+
+
 def drill(window, key='net_sales'):
     """For every cell and total of the 2x2 grid, split its YoY points by each drill dimension.
 

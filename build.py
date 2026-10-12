@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from core.metrics import compare, contribution, drill, weekly, DRILL_DIMS, OTHER_GENERATIONS, SMALL_BASE
+from core.metrics import compare, contribution, drill, family_drill, weekly, DRILL_DIMS, FAMILY_DRILL_DIMS, OTHER_GENERATIONS, SMALL_BASE
 from core.brief import display_facts, validate
 from core.facts import build_facts
 from core.headlines import SEGMENT_NAMES, headlines, products
@@ -212,17 +212,22 @@ def build():
                  for k in ('gen_z_new', 'new_customers', 'repeat_customers')}
     product_rows = products(flash['ptd']['drill'], inventory)
     assert abs(sum(r['diff'] for r in product_rows) - (flash['ptd']['ty'] - flash['ptd']['ly'])) < 0.05, 'products != growth'
+    # Each family's drill rows must add back to that family's change.
+    product_drill = family_drill(win['ptd'], 'net_sales')
+    for r in product_rows:
+        for col, rows in product_drill[r['name']].items():
+            assert abs(sum(x['diff'] for x in rows) - r['diff']) < 0.05, f"{r['name']}/{col}: rows != family change"
     start_label = f"{win['ptd']['ty_range'][0]:%b %-d}"
     heads = headlines(flash, trend, product_rows, inventory, start_label)
 
     data = dict(
         meta=dict(as_of=f"{ref['date']:%Y-%m-%d}", as_of_label=f"{ref['date']:%a %b %-d, %Y}",
-                  fiscal=f"FY26 W{ref['wk']}", small_base=SMALL_BASE, small_sales_base=1000, drill_dims=DRILL_DIMS, other_generations=OTHER_GENERATIONS, segment_names=SEGMENT_NAMES,
+                  fiscal=f"FY26 W{ref['wk']}", small_base=SMALL_BASE, small_sales_base=1000, drill_dims=DRILL_DIMS, family_drill_dims=FAMILY_DRILL_DIMS, other_generations=OTHER_GENERATIONS, segment_names=SEGMENT_NAMES,
                   period_start=f"{win['ptd']['ty_range'][0]:%b %-d}", wtd_start=f"{win['wtd']['ty_range'][0]:%b %-d}",
                   source=SOURCE.name, fingerprint=hashlib.sha256(SOURCE.read_bytes()).hexdigest()[:8],
                   built_at=datetime.now().strftime('%Y-%m-%d %H:%M')),
         flash=flash, trend=trend, trend_segments=trend_segments, trend_products=trend_products, inventory=inventory,
-        customers=customers, products=product_rows, headlines=heads)
+        customers=customers, products=product_rows, product_drill=product_drill, headlines=heads)
 
     # AI brief: the facts it may cite, the prompt input for whoever generates it, and the recorded model output.
     snap = inventory['snapshot_week']

@@ -396,6 +396,19 @@
         </div>
         <div class="rows with-stock" id="products"></div>
         <button class="more" id="prod-more" type="button"></button>
+        <div class="hint">Click a product family to see where its change came from.</div>
+      </div>
+      <div class="panel drill" id="pdrill" hidden aria-live="polite">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title" id="pdrill-title"></div>
+            <div class="panel-sub" id="pdrill-sub"></div>
+          </div>
+          <button class="close" id="pdrill-close" type="button">Close</button>
+        </div>
+        <div class="chips" id="pdrill-dims" role="group" aria-label="Break down by"></div>
+        <div class="rows" id="pdrill-rows"></div>
+        <div class="note" id="pdrill-foot"></div>
       </div>
     </div>
 
@@ -989,8 +1002,13 @@ function renderDrill() {
 }
 
 // A diverging bar row around zero: label | bar | value (+ optional extra cell).
-function barRow({name, tag, sub, value, max, tip, extra}) {
-  const r = document.createElement('div'); r.className = 'r'; r.tabIndex = 0;
+function barRow({name, tag, sub, value, max, tip, extra, onOpen, selected, label}) {
+  const r = document.createElement('div'); r.className = 'r' + (onOpen ? ' click' : '') + (selected ? ' sel' : ''); r.tabIndex = 0;
+  if (onOpen) {
+    r.setAttribute('role', 'button'); if (label) r.setAttribute('aria-label', label);
+    r.addEventListener('click', onOpen);
+    r.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } });
+  }
   const n = document.createElement('div'); n.className = 'name'; n.textContent = name;
   if (tag) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = tag; n.append(t); }
   if (sub) { const s = document.createElement('span'); s.className = 'sub'; s.textContent = sub; n.append(s); }
@@ -1016,6 +1034,7 @@ const STATUS = {
 };
 const chip = (st, text) => `<span class="st ${STATUS[st].cls}">${STATUS[st].icon ? `<span aria-hidden="true">${STATUS[st].icon}</span>` : ''}${esc(text || STATUS[st].label)}</span>`;
 let showAllProducts = false;
+const pd = {sel: null, dim: 'GEO_REGION'};
 
 function renderProducts() {
   const all = DATA.products, ups = all.filter(r => r.diff > 0), downs = all.filter(r => r.diff < 0);
@@ -1027,7 +1046,10 @@ function renderProducts() {
     if (!showAllProducts && i === Math.min(5, ups.length) && downs.length) {
       const g = document.createElement('div'); g.style.cssText = 'grid-column: 1 / -1; height: 10px'; box.append(g);
     }
+    const open = () => { pd.sel = pd.sel === r.name ? null : r.name; renderProducts(); renderProductDrill();
+                         if (pd.sel) document.getElementById('pdrill').scrollIntoView({behavior: 'smooth', block: 'nearest'}); };
     box.append(barRow({name: r.name, tag: r.prod_type, sub: `${usdK(r.ty)} vs ${usdK(r.ly)} (${signedPct(r.yoy)})`, value: r.diff, max,
+      onOpen: open, selected: r.name === pd.sel, label: `${r.name}: ${signedUsd(r.diff)} vs last year. Show where this change came from.`,
       extra: chip(r.status, `${wks(r.cover)} wks${r.status === 'ok' ? '' : ' · ' + STATUS[r.status].label.toLowerCase()}`),
       tip: () => [signedUsd(r.diff), `${r.name} · ${r.prod_type}`, `${money(r.ty)} vs ${money(r.ly)} last year (${signedPct(r.yoy)})`,
                   `${wks(r.cover)} weeks of stock left (last year ${wks(r.cover_ly)})`]}));
@@ -1035,6 +1057,33 @@ function renderProducts() {
   const btn = document.getElementById('prod-more');
   btn.textContent = showAllProducts ? 'Show top and bottom only' : `Show all ${all.length} families`;
   btn.onclick = () => { showAllProducts = !showAllProducts; renderProducts(); };
+}
+
+/* Drill: where one product family's dollar change came from (since the start of the data) */
+function renderProductDrill() {
+  const panel = document.getElementById('pdrill');
+  if (!pd.sel) { panel.hidden = true; return; }
+  const f = DATA.products.find(r => r.name === pd.sel), dims = DATA.product_drill[pd.sel];
+  const label = n => pd.dim === 'CUSTOMER_GROUP' ? SEG[n] : n;
+  document.getElementById('pdrill-title').textContent = `${f.name}: ${signedUsd(f.diff)} vs last year`;
+  document.getElementById('pdrill-sub').textContent = `${PERIOD.ptd} · ${money(f.ty)} this year vs ${money(f.ly)} last year`;
+  const chips = document.getElementById('pdrill-dims');
+  chips.innerHTML = '';
+  Object.entries(M.family_drill_dims).forEach(([col, name]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = name; b.setAttribute('aria-pressed', String(col === pd.dim));
+    b.addEventListener('click', () => { pd.dim = col; renderProductDrill(); });
+    chips.append(b);
+  });
+  const rows = [...dims[pd.dim]].sort((a, b) => b.diff - a.diff);
+  const max = Math.max(...rows.map(r => Math.abs(r.diff)), 1);
+  const box = document.getElementById('pdrill-rows');
+  box.innerHTML = `<div class="hd n">${esc(M.family_drill_dims[pd.dim])}</div><div class="hd"></div><div class="hd v">$ vs last year</div>`;
+  rows.forEach(r => box.append(barRow({
+    name: label(r.name), sub: `${usdK(r.ty)} vs ${usdK(r.ly)}`, value: r.diff, max,
+    tip: () => [signedUsd(r.diff), `${label(r.name)} · ${f.name}`, `${money(r.ty)} vs ${money(r.ly)} last year (${signedPct(r.yoy)})`]})));
+  document.getElementById('pdrill-foot').textContent = `Rows add up to ${signedUsd(rows.reduce((t, r) => t + r.diff, 0))}, the change for this family.`;
+  panel.hidden = false;
 }
 
 /* ---------- 4. Is stock in the right place? ---------- */
@@ -1106,6 +1155,7 @@ renderProducts();
 renderStockSummary();
 renderStockPage();
 document.getElementById('drill-close').addEventListener('click', () => { wf.sel = null; renderWaterfall(); renderDrill(); });
+document.getElementById('pdrill-close').addEventListener('click', () => { pd.sel = null; renderProducts(); renderProductDrill(); });
 document.querySelectorAll('nav button, [data-goto]').forEach(b => b.addEventListener('click', () => {
   location.hash = b.dataset.page || b.dataset.goto; window.scrollTo({top: 0});
 }));
