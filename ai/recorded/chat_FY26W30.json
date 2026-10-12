@@ -37,7 +37,7 @@
          "args": {"measure": "insider_share", "by": "channel", "where": {"age_group": ["Millennial", "Gen X", "Boomer"], "customer_type": "Returning"}}}
       ],
       "answer": {
-        "headline": "Gen Z members are far more likely to be returning customers; sign-up among first-time Gen Z customers fell mostly online, while in stores the drop is among returning Gen Z customers.",
+        "headline": "Returning Gen Z customers fell even though Gen Z Insider members are much more often returning customers; sign-up among first-time Gen Z fell mostly online, and in stores fewer returning Gen Z are members.",
         "sections": [
           {"title": "Answer", "items": [
             {"kind": "fact", "text": "Among Gen Z customers, {c1_member_ty} of Insider members are returning customers, against {c1_non_member_ty} of non-members."},
