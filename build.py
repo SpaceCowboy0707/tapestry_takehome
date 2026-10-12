@@ -175,6 +175,22 @@ def build():
     assert abs(sum(r['ty'] for r in trend) - flash['ptd']['ty']) < 0.01, 'weekly TY != PTD'
     assert abs(sum(r['ly_same_days'] for r in trend) - flash['ptd']['ly']) < 0.01, 'weekly LY != PTD LY'
 
+    # The same weekly view per customer group, in sales and in customers. Groups don't overlap,
+    # so their weekly sales must add back to the total line.
+    from core.metrics import SEGMENTS
+    trend_segments = {'all': {m: weekly(df, ref, m) for m in ('net_sales', 'customers')}}
+    for (age, cohort), mask in SEGMENTS.items():
+        trend_segments[f'{age}_{cohort}'] = {m: weekly(df[mask(df)], ref, m) for m in ('net_sales', 'customers')}
+    for i, r in enumerate(trend):
+        for side in ('ty', 'ly'):
+            parts = sum(trend_segments[k]['net_sales'][i][side] for k in trend_segments if k != 'all')
+            assert abs(parts - r[side]) < 0.01, f"W{r['wk']} {side}: groups {parts} != total {r[side]}"
+    for seg in trend_segments.values():
+        for m, rows in seg.items():
+            base = 1000 if m == 'net_sales' else SMALL_BASE
+            for r in rows:
+                r['small'] = r['ly_same_days'] < base
+
     inventory = inventory_view(df, inv, ref, win['ptd'])
     # Families must add back to the totals.
     for fy in ('ty', 'ly'):
@@ -193,7 +209,7 @@ def build():
                   period_start=f"{win['ptd']['ty_range'][0]:%b %-d}", wtd_start=f"{win['wtd']['ty_range'][0]:%b %-d}",
                   source=SOURCE.name, fingerprint=hashlib.sha256(SOURCE.read_bytes()).hexdigest()[:8],
                   built_at=datetime.now().strftime('%Y-%m-%d %H:%M')),
-        flash=flash, trend=trend, inventory=inventory,
+        flash=flash, trend=trend, trend_segments=trend_segments, inventory=inventory,
         customers=customers, products=product_rows, headlines=heads)
 
     # AI brief: the facts it may cite, the prompt input for whoever generates it, and the recorded model output.

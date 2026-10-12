@@ -22,7 +22,7 @@ Open `dist/index.html` in a browser. No server is needed.
 
 **Overview** covers the four areas in the brief: trend, customer segments, product families and stock.
 
-1. **Trend** Sales since Jun 28 (the first week in the extract), this week so far, and yesterday; a weekly chart of this year vs last year with the change under each week.
+1. **Trend** Sales since Jun 28 (the first week in the extract), this week so far, and yesterday; a trailing weekly chart of this year vs last year with the change under each week, for all customers or one customer group (the same four groups as the breakdown below), in sales or in customers. The unfinished week shows the same weekdays in both years. Everything after the chart is labelled as a year-over-year comparison.
 2. **By customer age group** The change in sales vs last year for each customer group (first-time vs returning, Gen Z vs other generations, or every generation), drawn from a zero line: right sold more, left sold less. The groups don't overlap, so their changes add up to the total. Click a step to see where its change came from by region, channel, category, product type or product family.
 3. **By product family** Product families ranked by dollar change, each with its weeks of stock left.
 4. **Stock insight** Families that could run out and families with too much stock.
