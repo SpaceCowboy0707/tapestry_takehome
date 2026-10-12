@@ -14,7 +14,7 @@ Rules:
 6. Structure: a one-sentence headline, then three sections in this order:
    - "What happened": 3 to 5 fact items about the period as a whole (since the first day of the data).
    - "What changed since last week": 2 to 4 fact items. Each one compares this week with last week, using the facts about this week so far, the last complete week and the previous stock count. Say what moved, not where things stand.
-   - "Observations": 2 to 4 items that put facts from different areas side by side (customers, products, stock), as fact items the cited facts show directly. Add one limit item if a figure needs a caveat. Leave out anything that needs a judgment the facts cannot show.
+   - "Observations": 5 fact items that go one level deeper than "What happened". Each one puts facts from at least two areas side by side (customers, store vs online, Insider, products, stock, regions) and states only what the cited facts show directly; do not repeat a "What happened" item. Then up to two limit items for figures that need a caveat. Leave out anything that needs a judgment the facts cannot show.
    Do not interpret, speculate or give recommendations; the brief reports what the data shows, people decide.
 7. Plain business English. No jargon: no "YoY", "WTD", "pp", "SKU", "cohort". Say "vs last year", "this week so far", "first-time customers", "returning customers".
 8. Lead with what matters most for decisions, not with the biggest number.

@@ -14,7 +14,7 @@ Rules:
 6. Structure: a one-sentence headline, then three sections in this order:
    - "What happened": 3 to 5 fact items about the period as a whole (since the first day of the data).
    - "What changed since last week": 2 to 4 fact items. Each one compares this week with last week, using the facts about this week so far, the last complete week and the previous stock count. Say what moved, not where things stand.
-   - "Observations": 2 to 4 items that put facts from different areas side by side (customers, products, stock), as fact items the cited facts show directly. Add one limit item if a figure needs a caveat. Leave out anything that needs a judgment the facts cannot show.
+   - "Observations": 5 fact items that go one level deeper than "What happened". Each one puts facts from at least two areas side by side (customers, store vs online, Insider, products, stock, regions) and states only what the cited facts show directly; do not repeat a "What happened" item. Then up to two limit items for figures that need a caveat. Leave out anything that needs a judgment the facts cannot show.
    Do not interpret, speculate or give recommendations; the brief reports what the data shows, people decide.
 7. Plain business English. No jargon: no "YoY", "WTD", "pp", "SKU", "cohort". Say "vs last year", "this week so far", "first-time customers", "returning customers".
 8. Lead with what matters most for decisions, not with the biggest number.
@@ -74,6 +74,23 @@ Facts (data as of Wed Aug 19, 2026, FY26 W30, fingerprint 83cad9e6):
 - most_over_name = Knit Dress  (Family with the most weeks of stock; Stock insight)
 - most_over_cover = 21.2  (Knit Dress, weeks of stock left; Stock insight)
 - most_over_sales_yoy = −50.8%  (Knit Dress, sales change vs last year; By product family)
+- top12_diff = +$54.8K  (Tabby and Pillow Tabby, change vs last year; By product family)
+- top12_growth_share = 85%  (Share of growth from Tabby and Pillow Tabby; By product family)
+- genz_new_top12_diff = +$18.8K  (Tabby and Pillow Tabby, change from first-time Gen Z customers; By customer age group → product family)
+- genz_new_top12_share = 40%  (Share of first-time Gen Z growth from Tabby and Pillow Tabby; By customer age group → product family)
+- genz_new_insider_store = 19%  (First-time Gen Z customers in stores who joined Insider; Customers (Insider flag) → store vs online)
+- genz_new_insider_store_ly = 21%  (First-time Gen Z customers in stores who joined Insider, last year; Customers (Insider flag) → store vs online)
+- other_new_insider_store = 22%  (First-time customers of other generations in stores who joined Insider; Customers (Insider flag) → store vs online)
+- other_new_insider_store_ly = 20%  (First-time customers of other generations in stores who joined Insider, last year; Customers (Insider flag) → store vs online)
+- genz_new_insider_online = 13%  (First-time Gen Z customers online who joined Insider; Customers (Insider flag) → store vs online)
+- genz_new_insider_online_ly = 21%  (First-time Gen Z customers online who joined Insider, last year; Customers (Insider flag) → store vs online)
+- other_new_insider_online = 19%  (First-time customers of other generations online who joined Insider; Customers (Insider flag) → store vs online)
+- other_new_insider_online_ly = 18%  (First-time customers of other generations online who joined Insider, last year; Customers (Insider flag) → store vs online)
+- genz_new_online_customers = 79  (First-time Gen Z customers online; By customer age group → store vs online)
+- genz_new_online_customers_ly = 38  (First-time Gen Z customers online, last year; By customer age group → store vs online)
+- genz_repeat_store_diff = −$5.5K  (Change from returning Gen Z customers in stores; By customer age group → store vs online)
+- genz_repeat_insider_store = 59%  (Returning Gen Z customers in stores who are in Insider; Customers (Insider flag) → store vs online)
+- genz_repeat_insider_store_ly = 68%  (Returning Gen Z customers in stores who are in Insider, last year; Customers (Insider flag) → store vs online)
 - wtd_yoy = +21.7%  (This week so far vs the same days last year; Trend → sales by week)
 - last_week_no = 29  (Last complete fiscal week; Trend → sales by week)
 - last_week_yoy = +12.7%  (Week 29 vs the same week last year; Trend → sales by week)

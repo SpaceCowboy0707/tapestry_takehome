@@ -64,7 +64,7 @@ Measures live in `core/metrics.py` as plain functions that take a filtered DataF
 
 ## AI brief
 
-The brief at the top of the page is the AI feature: a Monday-morning summary a merchant or regional lead can read in under a minute. It has three parts: what happened over the period, what changed since last week (compared with the previous week and the previous stock count, which the dashboard itself doesn't show), and observations that put customers, products and stock side by side. It states facts and findings in a neutral tone; it doesn't interpret, speculate or make recommendations.
+The brief at the top of the page is the AI feature: a Monday-morning summary a merchant or regional lead can read in under a minute. It has three parts: what happened over the period, what changed since last week (compared with the previous week and the previous stock count, which the dashboard itself doesn't show), and five observations that go a level deeper, each putting two areas side by side (customers, store vs online, Insider, products, stock, regions). It states facts and findings in a neutral tone; it doesn't interpret, speculate or make recommendations.
 
 How it is kept accurate:
 

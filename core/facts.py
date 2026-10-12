@@ -3,7 +3,7 @@
 The model never sees raw data and never writes a number: it writes {fact_id} placeholders, and the page fills
 them in from this list. Text facts (product names, dates) are facts too, so names also come from the data.
 """
-from core.metrics import MEASURES
+from core.metrics import MEASURES, OTHER_GENERATIONS
 
 
 def _row(rows, name):
@@ -81,6 +81,31 @@ def build_facts(data, win, prev_cover):
         add('most_over_name', worst['name'], 'text', 'Family with the most weeks of stock', 'Stock insight')
         add('most_over_cover', worst['ty']['cover'], 'weeks', f'{worst["name"]}, weeks of stock left', 'Stock insight')
         add('most_over_sales_yoy', worst['sales']['yoy'], 'pct_signed', f'{worst["name"]}, sales change vs last year', 'By product family')
+
+    # Observations: facts that link customers, channels, products and stock.
+    top12 = up[0]['diff'] + up[1]['diff']
+    add('top12_diff', top12, 'money_signed', f'{up[0]["name"]} and {up[1]["name"]}, change vs last year', 'By product family')
+    add('top12_growth_share', top12 / growth, 'pct0', f'Share of growth from {up[0]["name"]} and {up[1]["name"]}', 'By product family')
+    gz_fam = {r['name']: r for r in g['dims']['STYLE_GROUP']}
+    gz_top12 = sum(gz_fam[r['name']]['diff'] for r in up[:2] if r['name'] in gz_fam)
+    add('genz_new_top12_diff', gz_top12, 'money_signed', f'{up[0]["name"]} and {up[1]["name"]}, change from first-time Gen Z customers', 'By customer age group → product family')
+    add('genz_new_top12_share', gz_top12 / g['diff'], 'pct0', f'Share of first-time Gen Z growth from {up[0]["name"]} and {up[1]["name"]}', 'By customer age group → product family')
+    insider = MEASURES['insider_share']['fn']
+    older = lambda d: d[d.CUST_AGE_GROUP.isin(list(OTHER_GENERATIONS.values())) & (d.COHORT_STATUS == 'New')]
+    via = lambda d, ch: d[d.CHANNEL_DETAIL == ch]
+    for ch, key in (('Retail Store', 'store'), ('eComm', 'online')):
+        where = 'in stores' if key == 'store' else 'online'
+        on = lambda d: via(d, ch)
+        add(f'genz_new_insider_{key}', insider(on(gz_new)), 'pct0', f'First-time Gen Z customers {where} who joined Insider', 'Customers (Insider flag) → store vs online')
+        add(f'genz_new_insider_{key}_ly', insider(on(gz_new_ly)), 'pct0', f'First-time Gen Z customers {where} who joined Insider, last year', 'Customers (Insider flag) → store vs online')
+        add(f'other_new_insider_{key}', insider(on(older(t))), 'pct0', f'First-time customers of other generations {where} who joined Insider', 'Customers (Insider flag) → store vs online')
+        add(f'other_new_insider_{key}_ly', insider(on(older(l))), 'pct0', f'First-time customers of other generations {where} who joined Insider, last year', 'Customers (Insider flag) → store vs online')
+    add('genz_new_online_customers', MEASURES['customers']['fn'](via(gz_new, 'eComm')), 'int', 'First-time Gen Z customers online', 'By customer age group → store vs online')
+    add('genz_new_online_customers_ly', MEASURES['customers']['fn'](via(gz_new_ly, 'eComm')), 'int', 'First-time Gen Z customers online, last year', 'By customer age group → store vs online')
+    rep_store = _row(drill['gen_z_repeat']['dims']['CHANNEL_DETAIL'], 'Retail Store')
+    add('genz_repeat_store_diff', rep_store['diff'], 'money_signed', 'Change from returning Gen Z customers in stores', 'By customer age group → store vs online')
+    add('genz_repeat_insider_store', insider(via(gz_rep(t), 'Retail Store')), 'pct0', 'Returning Gen Z customers in stores who are in Insider', 'Customers (Insider flag) → store vs online')
+    add('genz_repeat_insider_store_ly', insider(via(gz_rep(l), 'Retail Store')), 'pct0', 'Returning Gen Z customers in stores who are in Insider, last year', 'Customers (Insider flag) → store vs online')
 
     # What changed since last week. "Last week" is the previous complete week, or the same weekdays of it
     # when comparing with the week in progress; stock is compared with the previous snapshot.
