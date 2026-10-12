@@ -26,10 +26,18 @@
         {"id": "c8", "tool": "breakdown", "purpose": "Check whether first-time customers of the other generations are joining less too.",
          "args": {"measure": "insider_share", "by": "channel", "where": {"age_group": ["Millennial", "Gen X", "Boomer"], "customer_type": "First-time"}}},
         {"id": "c9", "tool": "compare", "purpose": "Count first-time Gen Z customers who are members, against last year.",
-         "args": {"measure": "customers", "where": {"age_group": "Gen Z", "customer_type": "First-time", "insider": "Member"}}}
+         "args": {"measure": "customers", "where": {"age_group": "Gen Z", "customer_type": "First-time", "insider": "Member"}}},
+        {"id": "c10", "tool": "breakdown", "purpose": "Split the member share of returning Gen Z customers into stores and online.",
+         "args": {"measure": "insider_share", "by": "channel", "where": {"age_group": "Gen Z", "customer_type": "Returning"}}},
+        {"id": "c11", "tool": "breakdown", "purpose": "See where sales from returning Gen Z customers changed.",
+         "args": {"measure": "net_sales", "by": "channel", "where": {"age_group": "Gen Z", "customer_type": "Returning"}}},
+        {"id": "c12", "tool": "breakdown", "purpose": "Count returning Gen Z customers in stores and online.",
+         "args": {"measure": "customers", "by": "channel", "where": {"age_group": "Gen Z", "customer_type": "Returning"}}},
+        {"id": "c13", "tool": "breakdown", "purpose": "Check the member share of returning customers in the other generations.",
+         "args": {"measure": "insider_share", "by": "channel", "where": {"age_group": ["Millennial", "Gen X", "Boomer"], "customer_type": "Returning"}}}
       ],
       "answer": {
-        "headline": "Gen Z members are far more likely to be returning customers, and fewer first-time Gen Z customers are joining Insider than last year; the drop is mostly online, not in the stores that bring in most of them.",
+        "headline": "Gen Z members are far more likely to be returning customers; sign-up among first-time Gen Z customers fell mostly online, while in stores the drop is among returning Gen Z customers.",
         "sections": [
           {"title": "Answer", "items": [
             {"kind": "fact", "text": "Among Gen Z customers, {c1_member_ty} of Insider members are returning customers, against {c1_non_member_ty} of non-members."},
@@ -43,12 +51,20 @@
             {"kind": "fact", "text": "First-time customers of the other generations joined more than last year: the share rose from {c8_store_ly} to {c8_store_ty} in stores and from {c8_online_ly} to {c8_online_ty} online."},
             {"kind": "fact", "text": "The number of first-time Gen Z members still rose, from {c9_ly} to {c9_ty}, as many more first-time Gen Z customers came in."}
           ]},
+          {"title": "Returning Gen Z customers", "items": [
+            {"kind": "fact", "text": "Among returning Gen Z customers, the member share fell in stores, from {c10_store_ly} to {c10_store_ty}, and rose online, from {c10_online_ly} to {c10_online_ty}."},
+            {"kind": "fact", "text": "Returning Gen Z customers in stores went down from {c12_store_ly} to {c12_store_ty}, and sales from them fell by {c11_store_diff|abs}, against {c11_online_diff} online."},
+            {"kind": "fact", "text": "For returning customers of the other generations, the member share in stores rose from {c13_store_ly} to {c13_store_ty}."}
+          ]},
           {"title": "What it could mean", "items": [
             {"kind": "inference", "text": "Stores are bringing in most new Gen Z customers and still sign them up at close to last year's rate; the fall in sign-up is specific to Gen Z and sits mostly online."},
             {"kind": "inference", "text": "Membership is the strongest link to coming back that this data offers, so sign-up at the first purchase is the lever to test, starting with online checkout for Gen Z shoppers."},
-            {"kind": "action", "text": "A fair test: show the Insider sign-up more prominently at online checkout to some first-time shoppers and not to others, then compare how many join and how many come back."}
+            {"kind": "action", "text": "A fair test: show the Insider sign-up more prominently at online checkout to some first-time shoppers and not to others, then compare how many join and how many come back."},
+            {"kind": "inference", "text": "In stores, the weak spot for Gen Z is returning customers rather than first-time sign-up: fewer of them came back, and fewer of those who did are members."},
+            {"kind": "action", "text": "For stores, try an Insider offer aimed at Gen Z customers who have bought before, in some stores and not in similar ones, and compare how many come back."}
           ]},
           {"title": "Keep in mind", "items": [
+            {"kind": "limit", "text": "There are only {c12_store_ty} returning Gen Z customers in stores this year, so a few customers can move these shares."},
             {"kind": "limit", "text": "The online group is small, {c6_online_ly} first-time Gen Z customers last year and {c6_online_ty} this year, so its drop rests on a handful of members."},
             {"kind": "limit", "text": "Returning customers have had more time to join, so membership may follow loyalty rather than cause it."},
             {"kind": "limit", "text": "Each customer appears about once in this data, so returning is read from the customer's status, not a measured repeat rate; the data also doesn't say whether the Insider flag means member at purchase or today."}
