@@ -177,7 +177,9 @@
   .end-label.ly { fill: var(--ink-2); }
   .partial-label { fill: var(--muted); font-size: 11px; }
   .crosshair { stroke: var(--axis); stroke-width: 1; }
-  .trend-controls { margin: 4px 0 10px; }
+  .trend-controls { margin: 4px 0 10px; align-items: center; }
+  .trend-controls select { font: inherit; font-size: 13px; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; max-width: 100%; }
   .note { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
   details.table { margin-top: 10px; font-size: 13px; }
   details.table summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
@@ -345,6 +347,7 @@
         <div class="controls trend-controls">
           <div class="seg" id="trend-seg" role="group" aria-label="Customer group"></div>
           <div class="seg" id="trend-measure" role="group" aria-label="Measure"></div>
+          <select id="trend-product" aria-label="Product family"></select>
         </div>
         <div id="trend" class="chart"></div>
         <details class="table"><summary>Show as table</summary><div class="scroll"><table id="trend-table"></table></div></details>
@@ -799,8 +802,8 @@ function renderPerformance() {
       <div class="row"><span>${int(y.transactions)} orders</span></div></article>`;
 }
 
-// Weekly trend for all customers or one customer group, in sales or in customers.
-const tr = {seg: 'all', measure: 'net_sales'};
+// Weekly trend for all customers or one customer group, in sales or in customers, for all products or one family.
+const tr = {seg: 'all', measure: 'net_sales', product: 'all'};
 const TREND_SEGS = [['all', 'All customers'], ['gen_z_new', 'First-time Gen Z'], ['gen_z_repeat', 'Returning Gen Z'],
                     ['other_new', 'First-time, other'], ['other_repeat', 'Returning, other']];
 function niceStep(range) {
@@ -810,19 +813,24 @@ function niceStep(range) {
 function renderTrend() {
   segButtons('trend-seg', TREND_SEGS, tr.seg, k => { tr.seg = k; renderTrend(); });
   segButtons('trend-measure', [['net_sales', 'Sales'], ['customers', 'Customers']], tr.measure, k => { tr.measure = k; renderTrend(); });
+  trendProductPicker();
   const isSales = tr.measure === 'net_sales', segName = TREND_SEGS.find(([k]) => k === tr.seg)[1];
-  const weeks = DATA.trend_segments[tr.seg][tr.measure], open = weeks.find(r => r.partial);
+  const prod = tr.product === 'all' ? null : DATA.products.find(p => p.name === tr.product);
+  const source = prod ? DATA.trend_products[prod.name] : DATA.trend_segments;
+  const weeks = source[tr.seg][tr.measure], open = weeks.find(r => r.partial);
   document.getElementById('trend-title').textContent =
-    `${isSales ? 'Sales' : 'Customers'} by week, trailing ${weeks.length} weeks` + (tr.seg === 'all' ? '' : ` · ${segName}`);
+    `${isSales ? 'Sales' : 'Customers'} by week, trailing ${weeks.length} weeks` + (prod ? ` · ${prod.name}` : '') + (tr.seg === 'all' ? '' : ` · ${segName}`);
+  const stockNote = !prod ? '' : prod.cover == null ? ` ${prod.name} has no stock count.`
+    : ` ${prod.name} has ${prod.cover.toFixed(1)} weeks of stock left` + (STATUS[prod.status] && prod.status !== 'ok' ? ` (${STATUS[prod.status].label.toLowerCase()}).` : '.');
   document.getElementById('trend-sub').textContent = 'This year vs last year, week by week. The number under each week is its change vs the same week last year' +
     (open ? `; W${open.wk} is not finished, so both years show ${DAYS[0]}–${DAYS[open.days - 1]} only.` : '.') +
-    (weeks.some(r => r.small) ? ` Where last year's base is small, the change is shown as ${isSales ? 'dollars' : 'customers'} instead of a %.` : '');
+    (weeks.some(r => r.small) ? ` Where last year's base is small, the change is shown as ${isSales ? 'dollars' : 'customers'} instead of a %.` : '') + stockNote;
   const fmt = v => isSales ? money(v) : int(v);
   const axisFmt = v => isSales ? (v >= 1000 ? `$${Math.round(v / 1000)}K` : `$${Math.round(v)}`) : int(v);
   // Below the small base a % change misleads (metrics.SMALL_BASE), so those weeks show the change itself.
   const diffText = r => { const d = r.ty - r.ly_same_days; return isSales ? signedUsd(d) : (d >= 0 ? '+' : '−') + int(Math.abs(d)); };
   const yoyText = r => r.small ? diffText(r) : signedPct(r.yoy);
-  const rows = DATA.trend_segments[tr.seg][tr.measure], box = document.getElementById('trend');
+  const rows = weeks, box = document.getElementById('trend');
   const W = Math.max(300, box.clientWidth), narrow = W < 560;
   const H = narrow ? 230 : 260, m = {l: 46, r: narrow ? 58 : 72, t: 16, b: 46};
   const iw = W - m.l - m.r, ih = H - m.t - m.b, n = rows.length;
@@ -831,7 +839,7 @@ function renderTrend() {
   const lyv = r => r.partial ? r.ly_same_days : r.ly;
   const vals = rows.flatMap(r => [r.ty, lyv(r)]);
   const step = niceStep(Math.max(...vals) - Math.min(...vals) || 1);
-  const lo = Math.max(0, Math.floor(Math.min(...vals) / step) * step - (tr.seg === 'all' ? 0 : step)), hi = Math.ceil(Math.max(...vals) / step) * step;
+  const lo = Math.max(0, Math.floor(Math.min(...vals) / step) * step - (tr.seg === 'all' && !prod ? 0 : step)), hi = Math.ceil(Math.max(...vals) / step) * step;
   const y = v => m.t + ih - (v - lo) / (hi - lo) * ih;
   let g = '';
   for (let v = lo; v <= hi + step / 1000; v += step) {
@@ -857,7 +865,7 @@ function renderTrend() {
   });
   g += `<line class="crosshair" id="trend-x" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" visibility="hidden"/>`;
   g += `<rect id="trend-hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih + m.b}" fill="transparent"/>`;
-  box.innerHTML = `<svg class="${narrow ? 'narrow' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly ${isSales ? 'sales' : 'customers'}, ${segName}, this year vs last year, W${rows[0].wk} to W${rows[n - 1].wk}. Values are in the table below.">${g}</svg>`;
+  box.innerHTML = `<svg class="${narrow ? 'narrow' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly ${isSales ? 'sales' : 'customers'}, ${prod ? prod.name + ', ' : ''}${segName}, this year vs last year, W${rows[0].wk} to W${rows[n - 1].wk}. Values are in the table below.">${g}</svg>`;
   const hit = box.querySelector('#trend-hit'), cross = box.querySelector('#trend-x');
   const vs = r => r.small ? `${diffText(r)} (small base, % not shown)` : signedPct(r.yoy, 1);
   const tipFor = r => r.partial
@@ -875,6 +883,18 @@ function renderTrend() {
     rows.map(r => `<tr><td>W${r.wk}${r.partial ? ` (${r.days} days)` : ''}</td><td>${fmt(r.ty)}</td>
       <td>${fmt(r.partial ? r.ly_same_days : r.ly)}${r.partial ? ' (same days)' : ''}</td><td>${vs(r)}</td>
       <td>${isSales && r.wow !== undefined ? signedPct(r.wow) : '–'}</td></tr>`).join('') + '</tbody>';
+}
+
+// Product families, largest sales first; families that could run out or have too much stock say so.
+function trendProductPicker() {
+  const sel = document.getElementById('trend-product');
+  if (!sel.options.length) {
+    const fams = [...DATA.products].sort((a, b) => b.ty - a.ty);
+    sel.innerHTML = '<option value="all">All products</option>' + fams.map(p =>
+      `<option value="${esc(p.name)}">${esc(p.name)}${p.status === 'risk' || p.status === 'overstock' ? ` · ${STATUS[p.status].label.toLowerCase()}` : ''}</option>`).join('');
+    sel.addEventListener('change', () => { tr.product = sel.value; renderTrend(); });
+  }
+  sel.value = tr.product;
 }
 
 /* ---------- 2. Who is buying? (waterfall) ---------- */

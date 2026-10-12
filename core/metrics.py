@@ -138,17 +138,18 @@ def drill(window, key='net_sales'):
     return out
 
 
-def weekly(df, ref, key='net_sales'):
+def weekly(df, ref, key='net_sales', weeks=None):
     """FY26 week sequence against the same fiscal week LY, up to the as-of week.
 
     The as-of week is usually incomplete, so it also carries LY on the same fiscal days; its YoY uses that,
-    and week-over-week changes are only given between complete weeks.
+    and week-over-week changes are only given between complete weeks. Pass `weeks` when df is a slice that
+    may have no rows in some week (a single product family), so every slice has the same weeks.
     """
     from core.periods import TY, LY
     fn = MEASURES[key]['fn']
     ty, ly = df[df.FISCAL_YR == TY], df[df.FISCAL_YR == LY]
     rows = []
-    for wk in sorted(int(w) for w in df.WK.unique()):
+    for wk in weeks if weeks is not None else sorted(int(w) for w in df.WK.unique()):
         if wk > ref['wk']:
             break
         partial = wk == ref['wk'] and ref['dow'] < 6
