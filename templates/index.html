@@ -347,7 +347,7 @@
         <div class="controls trend-controls">
           <div class="seg" id="trend-seg" role="group" aria-label="Customer group"></div>
           <div class="seg" id="trend-measure" role="group" aria-label="Measure"></div>
-          <select id="trend-product" aria-label="Filter by product, region or channel"></select>
+          <div class="controls" id="trend-filters" role="group" aria-label="Filters"></div>
         </div>
         <div id="trend" class="chart"></div>
         <details class="table"><summary>Show as table</summary><div class="scroll"><table id="trend-table"></table></div></details>
@@ -817,7 +817,7 @@ function renderPerformance() {
 
 // Weekly trend for all customers or one customer group, in sales or in customers, for everything or one slice
 // (a product family, region, store vs online, or retail vs outlet).
-const tr = {seg: 'all', measure: 'net_sales', slice: 'all'};  // slice: 'all' or 'COLUMN|value'
+const tr = {seg: 'all', measure: 'net_sales', f: {}};  // f: column -> value; a missing column means all
 const TREND_SEGS = [['all', 'All customers'], ['gen_z_new', 'First-time Gen Z'], ['gen_z_repeat', 'Returning Gen Z'],
                     ['other_new', 'First-time, other'], ['other_repeat', 'Returning, other']];
 function niceStep(range) {
@@ -827,22 +827,28 @@ function niceStep(range) {
 function renderTrend() {
   segButtons('trend-seg', TREND_SEGS, tr.seg, k => { tr.seg = k; renderTrend(); });
   segButtons('trend-measure', [['net_sales', 'Sales'], ['customers', 'Customers']], tr.measure, k => { tr.measure = k; renderTrend(); });
-  trendProductPicker();
+  trendFilters();
   const isSales = tr.measure === 'net_sales', segName = TREND_SEGS.find(([k]) => k === tr.seg)[1];
-  const [sliceCol, sliceVal] = tr.slice === 'all' ? [null, null] : tr.slice.split('|');
-  const prod = sliceCol === 'STYLE_GROUP' ? DATA.products.find(p => p.name === sliceVal) : null;
-  const sliceName = sliceCol ? sliceLabel(sliceCol, sliceVal) : '';
-  const source = sliceCol ? DATA.trend_slices[sliceCol][sliceVal] : DATA.trend_segments;
-  const weeks = source[tr.seg][tr.measure], open = weeks.find(r => r.partial);
+  const cols = Object.keys(M.trend_slice_dims), picked = cols.filter(c => tr.f[c]);
+  const prod = tr.f.STYLE_GROUP ? DATA.products.find(p => p.name === tr.f.STYLE_GROUP) : null;
+  const sliceName = picked.map(c => sliceLabel(c, tr.f[c])).join(' · ');
+  const key = [...cols.map(c => tr.f[c] || '*'), tr.seg === 'all' ? '*' : tr.seg].join('|');
+  const weeks = cubeRows(key, tr.measure), open = DATA.trend.find(r => r.partial);
   document.getElementById('trend-title').textContent =
-    `${isSales ? 'Sales' : 'Customers'} by week, trailing ${weeks.length} weeks` + (sliceCol ? ` · ${sliceName}` : '') + (tr.seg === 'all' ? '' : ` · ${segName}`);
+    `${isSales ? 'Sales' : 'Customers'} by week, trailing ${DATA.trend.length} weeks` + (picked.length ? ` · ${sliceName}` : '') + (tr.seg === 'all' ? '' : ` · ${segName}`);
+  if (!weeks) {
+    document.getElementById('trend-sub').textContent = 'No sales for this combination in either year. Change a filter to see a trend.';
+    document.getElementById('trend').innerHTML = '<p class="note" style="padding:40px 0;text-align:center">No sales for this combination.</p>';
+    document.getElementById('trend-table').innerHTML = '';
+    return;
+  }
   const stockNote = !prod ? '' : prod.cover == null ? ` ${prod.name} has no stock count.`
     : ` ${prod.name} has ${prod.cover.toFixed(1)} weeks of stock left` + (STATUS[prod.status] && prod.status !== 'ok' ? ` (${STATUS[prod.status].label.toLowerCase()}).` : '.');
   document.getElementById('trend-sub').textContent = 'This year vs last year, week by week. The number under each week is its change vs the same week last year' +
     (open ? `; W${open.wk} is not finished, so both years show ${DAYS[0]}–${DAYS[open.days - 1]} only.` : '.') +
     (weeks.some(r => r.small) ? ` Where last year's base is small, the change is shown as ${isSales ? 'dollars' : 'customers'} instead of a %.` : '') + stockNote;
   const fmt = v => isSales ? money(v) : int(v);
-  const axisFmt = v => isSales ? (v >= 1000 ? `$${Math.round(v / 1000)}K` : `$${Math.round(v)}`) : int(v);
+  const axisFmt = v => isSales ? (v >= 1000 ? `$${v % 1000 ? (v / 1000).toFixed(1) : v / 1000}K` : `$${Math.round(v)}`) : int(v);
   // Below the small base a % change misleads (metrics.SMALL_BASE), so those weeks show the change itself.
   const diffText = r => { const d = r.ty - r.ly_same_days; return isSales ? signedUsd(d) : (d >= 0 ? '+' : '−') + int(Math.abs(d)); };
   const yoyText = r => r.small ? diffText(r) : signedPct(r.yoy);
@@ -855,7 +861,7 @@ function renderTrend() {
   const lyv = r => r.partial ? r.ly_same_days : r.ly;
   const vals = rows.flatMap(r => [r.ty, lyv(r)]);
   const step = niceStep(Math.max(...vals) - Math.min(...vals) || 1);
-  const lo = Math.max(0, Math.floor(Math.min(...vals) / step) * step - (tr.seg === 'all' && !sliceCol ? 0 : step)), hi = Math.ceil(Math.max(...vals) / step) * step;
+  const lo = Math.max(0, Math.floor(Math.min(...vals) / step) * step - (tr.seg === 'all' && !picked.length ? 0 : step)), hi = Math.ceil(Math.max(...vals) / step) * step;
   const y = v => m.t + ih - (v - lo) / (hi - lo) * ih;
   let g = '';
   for (let v = lo; v <= hi + step / 1000; v += step) {
@@ -881,7 +887,7 @@ function renderTrend() {
   });
   g += `<line class="crosshair" id="trend-x" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" visibility="hidden"/>`;
   g += `<rect id="trend-hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih + m.b}" fill="transparent"/>`;
-  box.innerHTML = `<svg class="${narrow ? 'narrow' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly ${isSales ? 'sales' : 'customers'}, ${sliceCol ? sliceName + ', ' : ''}${segName}, this year vs last year, W${rows[0].wk} to W${rows[n - 1].wk}. Values are in the table below.">${g}</svg>`;
+  box.innerHTML = `<svg class="${narrow ? 'narrow' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly ${isSales ? 'sales' : 'customers'}, ${picked.length ? sliceName + ', ' : ''}${segName}, this year vs last year, W${rows[0].wk} to W${rows[n - 1].wk}. Values are in the table below.">${g}</svg>`;
   const hit = box.querySelector('#trend-hit'), cross = box.querySelector('#trend-x');
   const vs = r => r.small ? `${diffText(r)} (small base, % not shown)` : signedPct(r.yoy, 1);
   const tipFor = r => r.partial
@@ -904,26 +910,46 @@ function renderTrend() {
 // Plain names for the raw channel values.
 const SLICE_NAMES = {CHANNEL_DETAIL: {'Retail Store': 'Store', 'eComm': 'Online'}, SALES_CHANNEL: {RETAIL: 'Full-price', OUTLET: 'Outlet'}};
 const sliceLabel = (col, v) => (SLICE_NAMES[col] && SLICE_NAMES[col][v]) || v;
-// One filter, grouped: product families (largest sales first, flagged when they could run out or have too much
-// stock), then regions and channels (largest sales first).
-function trendProductPicker() {
-  const sel = document.getElementById('trend-product');
-  if (!sel.options.length) {
-    const opt = (col, v, text) => `<option value="${esc(col + '|' + v)}">${esc(text)}</option>`;
-    const fams = [...DATA.products].sort((a, b) => b.ty - a.ty);
-    let html = '<option value="all">All products, regions and channels</option>' +
-      `<optgroup label="Product family">` + fams.map(p => opt('STYLE_GROUP', p.name,
-        p.name + (p.status === 'risk' || p.status === 'overstock' ? ` · ${STATUS[p.status].label.toLowerCase()}` : ''))).join('') + '</optgroup>';
-    const total = rows => rows.reduce((t, r) => t + r.ty, 0);
-    Object.entries(M.trend_slice_dims).filter(([col]) => col !== 'STYLE_GROUP').forEach(([col, label]) => {
-      const vals = Object.keys(DATA.trend_slices[col]).sort((a, b) =>
-        total(DATA.trend_slices[col][b].all.net_sales) - total(DATA.trend_slices[col][a].all.net_sales));
-      html += `<optgroup label="${esc(label)}">` + vals.map(v => opt(col, v, sliceLabel(col, v))).join('') + '</optgroup>';
-    });
-    sel.innerHTML = html;
-    sel.addEventListener('change', () => { tr.slice = sel.value; renderTrend(); });
+const FILTER_ALL = {STYLE_GROUP: 'All products', GEO_REGION: 'All regions', CHANNEL_DETAIL: 'Store and online', SALES_CHANNEL: 'Full-price and outlet'};
+
+// One week row per fiscal week from the precomputed cube, in the same shape as metrics.weekly().
+function cubeRows(key, measure) {
+  const e = DATA.trend_cube[key];
+  if (!e) return null;
+  const arr = e[measure === 'net_sales' ? 's' : 'c'], base = measure === 'net_sales' ? M.small_sales_base : M.small_base;
+  const rows = DATA.trend.map((t, i) => {
+    const [ty, ly, same] = arr[i];
+    return {wk: t.wk, partial: t.partial, days: t.days, ty, ly, ly_same_days: same, yoy: same ? ty / same - 1 : null, small: same < base};
+  });
+  for (let i = 1; i < rows.length; i++) {
+    const p = rows[i - 1], c = rows[i];
+    if (!c.partial && !p.partial) { c.wow = p.ty ? c.ty / p.ty - 1 : null; c.ly_wow = p.ly ? c.ly / p.ly - 1 : null; }
   }
-  sel.value = tr.slice;
+  return rows;
+}
+
+// Four independent filters, each listing its values by this year's sales (largest first); product families
+// that could run out or have too much stock say so.
+function trendFilters() {
+  const box = document.getElementById('trend-filters');
+  if (box.children.length) return;
+  const cols = Object.keys(M.trend_slice_dims);
+  const salesOf = (col, v) => {
+    const e = DATA.trend_cube[cols.map(c => c === col ? v : '*').concat('*').join('|')];
+    return e ? e.s.reduce((t, w) => t + w[0], 0) : 0;
+  };
+  const valuesOf = col => [...new Set(Object.keys(DATA.trend_cube).map(k => k.split('|')[cols.indexOf(col)]))]
+    .filter(v => v !== '*').sort((a, b) => salesOf(col, b) - salesOf(col, a));
+  cols.forEach(col => {
+    const sel = document.createElement('select');
+    sel.setAttribute('aria-label', M.trend_slice_dims[col]);
+    const status = v => { const p = col === 'STYLE_GROUP' && DATA.products.find(x => x.name === v);
+      return p && (p.status === 'risk' || p.status === 'overstock') ? ` · ${STATUS[p.status].label.toLowerCase()}` : ''; };
+    sel.innerHTML = `<option value="">${esc(FILTER_ALL[col])}</option>` +
+      valuesOf(col).map(v => `<option value="${esc(v)}">${esc(sliceLabel(col, v) + status(v))}</option>`).join('');
+    sel.addEventListener('change', () => { if (sel.value) tr.f[col] = sel.value; else delete tr.f[col]; renderTrend(); });
+    box.append(sel);
+  });
 }
 
 /* ---------- 2. Who is buying? (waterfall) ---------- */

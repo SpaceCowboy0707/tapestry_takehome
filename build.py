@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from core.metrics import compare, contribution, drill, family_drill, weekly, DRILL_DIMS, FAMILY_DRILL_DIMS, OTHER_GENERATIONS, SMALL_BASE
+from core.metrics import compare, contribution, drill, family_drill, weekly, trend_cube as cube, DRILL_DIMS, FAMILY_DRILL_DIMS, OTHER_GENERATIONS, SMALL_BASE
 from core.brief import display_facts, validate
 from core.facts import build_facts
 from core.headlines import SEGMENT_NAMES, headlines, products
@@ -210,6 +210,27 @@ def build():
         trend_slices[col] = {v: by_segment(df[df[col] == v]) for v in sorted(df[col].unique())}
         adds_up([v['all']['net_sales'] for v in trend_slices[col].values()], trend, TREND_SLICE_DIMS[col])
 
+    # The page combines the filters freely (product x region x channel x store type x customer group), so every
+    # combination is computed here. Where a combination is also computed above, one filter at a time, both must agree.
+    trend_cube = cube(df, ref, weeks, list(TREND_SLICE_DIMS))
+    stars = ['*'] * len(TREND_SLICE_DIMS)
+
+    def same(key, seg_rows):
+        e = trend_cube.get(key)
+        for m, short in (('net_sales', 's'), ('customers', 'c')):
+            for i, r in enumerate(seg_rows[m]):
+                got = e[short][i] if e else [0, 0, 0]
+                want = [r['ty'], r['ly'], r['ly_same_days']]
+                assert all(abs(a - b) < 0.011 for a, b in zip(got, want)), f'cube {key} {m} W{r["wk"]}: {got} != {want}'
+
+    for seg, rows in trend_segments.items():
+        same('|'.join(stars + ['*' if seg == 'all' else seg]), rows)
+    for j, col in enumerate(TREND_SLICE_DIMS):
+        for v, segs in trend_slices[col].items():
+            for seg, rows in segs.items():
+                k = list(stars); k[j] = v
+                same('|'.join(k + ['*' if seg == 'all' else seg]), rows)
+
     inventory = inventory_view(df, inv, ref, win['ptd'])
     # Families must add back to the totals.
     for fy in ('ty', 'ly'):
@@ -233,7 +254,7 @@ def build():
                   period_start=f"{win['ptd']['ty_range'][0]:%b %-d}", wtd_start=f"{win['wtd']['ty_range'][0]:%b %-d}",
                   source=SOURCE.name, fingerprint=hashlib.sha256(SOURCE.read_bytes()).hexdigest()[:8],
                   built_at=datetime.now().strftime('%Y-%m-%d %H:%M')),
-        flash=flash, trend=trend, trend_segments=trend_segments, trend_slices=trend_slices, inventory=inventory,
+        flash=flash, trend=trend, trend_cube=trend_cube, inventory=inventory,
         customers=customers, products=product_rows, product_drill=product_drill, headlines=heads)
 
     # AI brief: the facts it may cite, the prompt input for whoever generates it, and the recorded model output.

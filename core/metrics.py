@@ -225,3 +225,38 @@ def compare(window, key):
     out = dict(ty=ty, ly=ly, diff=None if ty is None or ly is None else ty - ly)
     out['yoy'] = (ty / ly - 1) if ly else None
     return out
+
+
+def trend_cube(df, ref, weeks, dims):
+    """Weekly sales and customers for every combination of the line chart's filters, as compact arrays.
+
+    Key: one value per column of `dims` plus the customer group, '*' meaning all, joined with '|'.
+    Value: {'s': [[ty, ly, ly_same_days] per week], 'c': [...]} for sales and customers. Customers are counted
+    distinct within each combination, never summed across cells. Only combinations with data are kept.
+    """
+    import itertools
+    from core.periods import TY, LY
+    d = df.copy()
+    d['SEG'] = ''
+    for (age, cohort), mask in SEGMENTS.items():
+        d.loc[mask(d), 'SEG'] = f'{age}_{cohort}'
+    cols_all = list(dims) + ['SEG']
+    partial = ref['wk'] if ref['dow'] < 6 else None
+    same_days = lambda x: x[(x.WK != partial) | (x.DOW <= ref['dow'])] if partial is not None else x
+    ty = same_days(d[(d.FISCAL_YR == TY) & d.WK.isin(weeks)])
+    ly = d[(d.FISCAL_YR == LY) & d.WK.isin(weeks)]
+    sides = ((0, ty), (1, ly), (2, same_days(ly)))
+    widx = {w: i for i, w in enumerate(weeks)}
+    out = {}
+    for pick in itertools.product((False, True), repeat=len(cols_all)):
+        cols = [c for c, on in zip(cols_all, pick) if on]
+        for slot, frame in sides:
+            g = frame.groupby(cols + ['WK'])
+            for (measure, series) in (('s', g['DEMAND_AMT'].sum()), ('c', g['CUST_ID'].nunique())):
+                for idx, val in series.items():
+                    idx = idx if isinstance(idx, tuple) else (idx,)
+                    vals = dict(zip(cols, idx[:-1]))
+                    key = '|'.join(str(vals.get(c, '*')) for c in cols_all)
+                    e = out.setdefault(key, {'s': [[0, 0, 0] for _ in weeks], 'c': [[0, 0, 0] for _ in weeks]})
+                    e[measure][widx[int(idx[-1])]][slot] = round(float(val), 2) if measure == 's' else int(val)
+    return out
