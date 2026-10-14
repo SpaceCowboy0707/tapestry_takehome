@@ -347,7 +347,7 @@
         <div class="controls trend-controls">
           <div class="seg" id="trend-seg" role="group" aria-label="Customer group"></div>
           <div class="seg" id="trend-measure" role="group" aria-label="Measure"></div>
-          <select id="trend-product" aria-label="Product family"></select>
+          <select id="trend-product" aria-label="Filter by product, region or channel"></select>
         </div>
         <div id="trend" class="chart"></div>
         <details class="table"><summary>Show as table</summary><div class="scroll"><table id="trend-table"></table></div></details>
@@ -815,8 +815,9 @@ function renderPerformance() {
       <div class="row"><span>${int(y.transactions)} orders</span></div></article>`;
 }
 
-// Weekly trend for all customers or one customer group, in sales or in customers, for all products or one family.
-const tr = {seg: 'all', measure: 'net_sales', product: 'all'};
+// Weekly trend for all customers or one customer group, in sales or in customers, for everything or one slice
+// (a product family, region, store vs online, or retail vs outlet).
+const tr = {seg: 'all', measure: 'net_sales', slice: 'all'};  // slice: 'all' or 'COLUMN|value'
 const TREND_SEGS = [['all', 'All customers'], ['gen_z_new', 'First-time Gen Z'], ['gen_z_repeat', 'Returning Gen Z'],
                     ['other_new', 'First-time, other'], ['other_repeat', 'Returning, other']];
 function niceStep(range) {
@@ -828,11 +829,13 @@ function renderTrend() {
   segButtons('trend-measure', [['net_sales', 'Sales'], ['customers', 'Customers']], tr.measure, k => { tr.measure = k; renderTrend(); });
   trendProductPicker();
   const isSales = tr.measure === 'net_sales', segName = TREND_SEGS.find(([k]) => k === tr.seg)[1];
-  const prod = tr.product === 'all' ? null : DATA.products.find(p => p.name === tr.product);
-  const source = prod ? DATA.trend_products[prod.name] : DATA.trend_segments;
+  const [sliceCol, sliceVal] = tr.slice === 'all' ? [null, null] : tr.slice.split('|');
+  const prod = sliceCol === 'STYLE_GROUP' ? DATA.products.find(p => p.name === sliceVal) : null;
+  const sliceName = sliceCol ? sliceLabel(sliceCol, sliceVal) : '';
+  const source = sliceCol ? DATA.trend_slices[sliceCol][sliceVal] : DATA.trend_segments;
   const weeks = source[tr.seg][tr.measure], open = weeks.find(r => r.partial);
   document.getElementById('trend-title').textContent =
-    `${isSales ? 'Sales' : 'Customers'} by week, trailing ${weeks.length} weeks` + (prod ? ` · ${prod.name}` : '') + (tr.seg === 'all' ? '' : ` · ${segName}`);
+    `${isSales ? 'Sales' : 'Customers'} by week, trailing ${weeks.length} weeks` + (sliceCol ? ` · ${sliceName}` : '') + (tr.seg === 'all' ? '' : ` · ${segName}`);
   const stockNote = !prod ? '' : prod.cover == null ? ` ${prod.name} has no stock count.`
     : ` ${prod.name} has ${prod.cover.toFixed(1)} weeks of stock left` + (STATUS[prod.status] && prod.status !== 'ok' ? ` (${STATUS[prod.status].label.toLowerCase()}).` : '.');
   document.getElementById('trend-sub').textContent = 'This year vs last year, week by week. The number under each week is its change vs the same week last year' +
@@ -852,7 +855,7 @@ function renderTrend() {
   const lyv = r => r.partial ? r.ly_same_days : r.ly;
   const vals = rows.flatMap(r => [r.ty, lyv(r)]);
   const step = niceStep(Math.max(...vals) - Math.min(...vals) || 1);
-  const lo = Math.max(0, Math.floor(Math.min(...vals) / step) * step - (tr.seg === 'all' && !prod ? 0 : step)), hi = Math.ceil(Math.max(...vals) / step) * step;
+  const lo = Math.max(0, Math.floor(Math.min(...vals) / step) * step - (tr.seg === 'all' && !sliceCol ? 0 : step)), hi = Math.ceil(Math.max(...vals) / step) * step;
   const y = v => m.t + ih - (v - lo) / (hi - lo) * ih;
   let g = '';
   for (let v = lo; v <= hi + step / 1000; v += step) {
@@ -878,7 +881,7 @@ function renderTrend() {
   });
   g += `<line class="crosshair" id="trend-x" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" visibility="hidden"/>`;
   g += `<rect id="trend-hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih + m.b}" fill="transparent"/>`;
-  box.innerHTML = `<svg class="${narrow ? 'narrow' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly ${isSales ? 'sales' : 'customers'}, ${prod ? prod.name + ', ' : ''}${segName}, this year vs last year, W${rows[0].wk} to W${rows[n - 1].wk}. Values are in the table below.">${g}</svg>`;
+  box.innerHTML = `<svg class="${narrow ? 'narrow' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly ${isSales ? 'sales' : 'customers'}, ${sliceCol ? sliceName + ', ' : ''}${segName}, this year vs last year, W${rows[0].wk} to W${rows[n - 1].wk}. Values are in the table below.">${g}</svg>`;
   const hit = box.querySelector('#trend-hit'), cross = box.querySelector('#trend-x');
   const vs = r => r.small ? `${diffText(r)} (small base, % not shown)` : signedPct(r.yoy, 1);
   const tipFor = r => r.partial
@@ -898,16 +901,29 @@ function renderTrend() {
       <td>${isSales && r.wow !== undefined ? signedPct(r.wow) : '–'}</td></tr>`).join('') + '</tbody>';
 }
 
-// Product families, largest sales first; families that could run out or have too much stock say so.
+// Plain names for the raw channel values.
+const SLICE_NAMES = {CHANNEL_DETAIL: {'Retail Store': 'Store', 'eComm': 'Online'}, SALES_CHANNEL: {RETAIL: 'Full-price', OUTLET: 'Outlet'}};
+const sliceLabel = (col, v) => (SLICE_NAMES[col] && SLICE_NAMES[col][v]) || v;
+// One filter, grouped: product families (largest sales first, flagged when they could run out or have too much
+// stock), then regions and channels (largest sales first).
 function trendProductPicker() {
   const sel = document.getElementById('trend-product');
   if (!sel.options.length) {
+    const opt = (col, v, text) => `<option value="${esc(col + '|' + v)}">${esc(text)}</option>`;
     const fams = [...DATA.products].sort((a, b) => b.ty - a.ty);
-    sel.innerHTML = '<option value="all">All products</option>' + fams.map(p =>
-      `<option value="${esc(p.name)}">${esc(p.name)}${p.status === 'risk' || p.status === 'overstock' ? ` · ${STATUS[p.status].label.toLowerCase()}` : ''}</option>`).join('');
-    sel.addEventListener('change', () => { tr.product = sel.value; renderTrend(); });
+    let html = '<option value="all">All products, regions and channels</option>' +
+      `<optgroup label="Product family">` + fams.map(p => opt('STYLE_GROUP', p.name,
+        p.name + (p.status === 'risk' || p.status === 'overstock' ? ` · ${STATUS[p.status].label.toLowerCase()}` : ''))).join('') + '</optgroup>';
+    const total = rows => rows.reduce((t, r) => t + r.ty, 0);
+    Object.entries(M.trend_slice_dims).filter(([col]) => col !== 'STYLE_GROUP').forEach(([col, label]) => {
+      const vals = Object.keys(DATA.trend_slices[col]).sort((a, b) =>
+        total(DATA.trend_slices[col][b].all.net_sales) - total(DATA.trend_slices[col][a].all.net_sales));
+      html += `<optgroup label="${esc(label)}">` + vals.map(v => opt(col, v, sliceLabel(col, v))).join('') + '</optgroup>';
+    });
+    sel.innerHTML = html;
+    sel.addEventListener('change', () => { tr.slice = sel.value; renderTrend(); });
   }
-  sel.value = tr.product;
+  sel.value = tr.slice;
 }
 
 /* ---------- 2. Who is buying? (waterfall) ---------- */

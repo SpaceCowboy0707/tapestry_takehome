@@ -23,6 +23,10 @@ def fmt_range(r):
     return f'{a:%b %-d}–{b:%-d, %Y}' if a.month == b.month else f'{a:%b %-d}–{b:%b %-d, %Y}'
 
 
+# Line chart filter: one of these at a time, crossed with the customer group buttons.
+TREND_SLICE_DIMS = {'STYLE_GROUP': 'Product family', 'GEO_REGION': 'Region',
+                    'CHANNEL_DETAIL': 'Store vs online', 'SALES_CHANNEL': 'Retail vs outlet'}
+
 BRIEF_DIR = ROOT / 'ai'
 
 
@@ -199,9 +203,12 @@ def build():
 
     trend_segments = by_segment(df)
     adds_up([v['net_sales'] for k, v in trend_segments.items() if k != 'all'], trend, 'groups')
-    # The same view for each product family, in the line chart's product picker; families add back to the total too.
-    trend_products = {f: by_segment(df[df.STYLE_GROUP == f]) for f in sorted(df.STYLE_GROUP.unique())}
-    adds_up([v['all']['net_sales'] for v in trend_products.values()], trend, 'families')
+    # The same view for each product family, region, store vs online and retail vs outlet, one at a time in the
+    # line chart's filter; within each, the members add back to the total too.
+    trend_slices = {}
+    for col in TREND_SLICE_DIMS:
+        trend_slices[col] = {v: by_segment(df[df[col] == v]) for v in sorted(df[col].unique())}
+        adds_up([v['all']['net_sales'] for v in trend_slices[col].values()], trend, TREND_SLICE_DIMS[col])
 
     inventory = inventory_view(df, inv, ref, win['ptd'])
     # Families must add back to the totals.
@@ -222,11 +229,11 @@ def build():
 
     data = dict(
         meta=dict(as_of=f"{ref['date']:%Y-%m-%d}", as_of_label=f"{ref['date']:%a %b %-d, %Y}",
-                  fiscal=f"FY26 W{ref['wk']}", small_base=SMALL_BASE, small_sales_base=1000, drill_dims=DRILL_DIMS, family_drill_dims=FAMILY_DRILL_DIMS, other_generations=OTHER_GENERATIONS, segment_names=SEGMENT_NAMES,
+                  fiscal=f"FY26 W{ref['wk']}", small_base=SMALL_BASE, small_sales_base=1000, drill_dims=DRILL_DIMS, family_drill_dims=FAMILY_DRILL_DIMS, trend_slice_dims=TREND_SLICE_DIMS, other_generations=OTHER_GENERATIONS, segment_names=SEGMENT_NAMES,
                   period_start=f"{win['ptd']['ty_range'][0]:%b %-d}", wtd_start=f"{win['wtd']['ty_range'][0]:%b %-d}",
                   source=SOURCE.name, fingerprint=hashlib.sha256(SOURCE.read_bytes()).hexdigest()[:8],
                   built_at=datetime.now().strftime('%Y-%m-%d %H:%M')),
-        flash=flash, trend=trend, trend_segments=trend_segments, trend_products=trend_products, inventory=inventory,
+        flash=flash, trend=trend, trend_segments=trend_segments, trend_slices=trend_slices, inventory=inventory,
         customers=customers, products=product_rows, product_drill=product_drill, headlines=heads)
 
     # AI brief: the facts it may cite, the prompt input for whoever generates it, and the recorded model output.
