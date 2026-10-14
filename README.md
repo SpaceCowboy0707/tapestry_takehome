@@ -65,7 +65,7 @@ Measures live in `core/metrics.py` as plain functions that take a filtered DataF
 
 ## AI brief
 
-The brief at the top of the page is the AI feature: a Monday-morning summary a merchant or regional lead can read in under a minute. It has four parts: what happened over the period, what changed since last week (compared with the previous week and the previous stock count, which the dashboard itself doesn't show), five observations that go a level deeper, each putting two areas side by side (customers, store vs online, Insider, products, stock, regions), and week-by-week trends by region, product, channel and customer group, found by the weekly scan. Each group named in a trend has two buttons: **Weekly trend** sets the trend chart's filters to that group, and **Break it down** splits the group's change by product, region, channel or customer group (with stock status for products). It states facts and findings in a neutral tone; it doesn't interpret, speculate or make recommendations.
+The brief at the top of the page is the AI feature: a Monday-morning summary a merchant or regional lead can read in under a minute. It has four parts: what happened over the period, what changed since last week (compared with the previous week and the previous stock count, which the dashboard itself doesn't show), five observations that go a level deeper, each putting two areas side by side (customers, store vs online, Insider, products, stock, regions), and week-by-week trends by region, product, channel and customer group, found by the weekly scan. It states facts and findings in a neutral tone; it doesn't interpret, speculate or make recommendations.
 
 How it is kept accurate:
 

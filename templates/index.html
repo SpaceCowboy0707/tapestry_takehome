@@ -92,12 +92,6 @@
   .fact { font-weight: 650; font-variant-numeric: tabular-nums; border-bottom: 1px dotted var(--muted); cursor: help; }
   .fact:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
   .brief-foot { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
-  .followups { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 5px 0 2px; font-size: 12.5px; }
-  .followups .who { color: var(--muted); }
-  .followups button { appearance: none; border: 1px solid var(--border); background: none; color: var(--ink-2); font: inherit;
-                      font-size: 12.5px; padding: 3px 9px; border-radius: 999px; cursor: pointer; }
-  .followups button:hover { color: var(--ink); border-color: var(--ink-2); }
-  .follow { margin-top: 12px; }
   .brief-foot code { font-size: 12px; }
   .brief-foot:empty { display: none; }
   .brief-errors { margin: 8px 0 0; padding-left: 18px; color: var(--down); font-size: 13px; }
@@ -317,18 +311,6 @@
       <p class="brief-headline" id="brief-headline"></p>
       <div class="brief-grid" id="brief-body"></div>
       <div class="brief-foot" id="brief-foot"></div>
-      <div class="panel drill follow" id="follow" hidden aria-live="polite">
-        <div class="panel-head">
-          <div>
-            <div class="panel-title" id="follow-title"></div>
-            <div class="panel-sub" id="follow-sub"></div>
-          </div>
-          <button class="close" id="follow-close" type="button">Close</button>
-        </div>
-        <div class="chips" id="follow-dims" role="group" aria-label="Break down by"></div>
-        <div class="rows" id="follow-rows"></div>
-        <div class="note" id="follow-foot"></div>
-      </div>
     </div>
 
     <div class="block opp" id="b-opp">
@@ -623,80 +605,6 @@ function renderBrief(B, p, columns) {
   badge.className = 'badge ok';
   badge.innerHTML = `<span>AI-written</span>·<b>✓</b><span>${F.checked()} numbers checked</span>`;
   foot.textContent = '';
-}
-
-/* ---------- Follow-ups from the week-by-week trends ---------- */
-// Each trend in the brief names groups the scan flagged (core/scan.py). From each group, one click opens its weekly
-// trend or breaks its change down; both read the same precomputed combinations as the trend chart.
-const FOLLOW_DIMS = ['STYLE_GROUP', 'GEO_REGION', 'CHANNEL_DETAIL', 'SALES_CHANNEL', 'SEG'];
-const followDimName = c => c === 'SEG' ? 'Customer group' : M.trend_slice_dims[c];
-const fol = {hit: null, dim: null};
-function cubeTotal(f, seg) {
-  const e = DATA.trend_cube[[...Object.keys(M.trend_slice_dims).map(c => f[c] || '*'), seg || '*'].join('|')];
-  if (!e) return null;
-  return e.s.reduce((t, w) => ({ty: t.ty + w[0], ly: t.ly + w[2]}), {ty: 0, ly: 0});   // ly on the same days
-}
-function partsOf(hit) {
-  const f = {}; let seg = null;
-  hit.parts.forEach(([c, v]) => { if (c === 'SEG') seg = v; else f[c] = v; });
-  return {f, seg};
-}
-function showTrendFor(hit) {
-  const {f, seg} = partsOf(hit);
-  tr.f = f; tr.seg = seg || 'all'; renderTrend();
-  document.getElementById('trend').closest('.panel').scrollIntoView({behavior: 'smooth', block: 'start'});
-}
-function renderFollow() {
-  const panel = document.getElementById('follow');
-  if (!fol.hit) { panel.hidden = true; return; }
-  const {f, seg} = partsOf(fol.hit), used = fol.hit.parts.map(([c]) => c);
-  const dims = FOLLOW_DIMS.filter(c => !used.includes(c));
-  if (!dims.includes(fol.dim)) fol.dim = dims[0];
-  const tot = cubeTotal(f, seg);
-  document.getElementById('follow-title').textContent = `${fol.hit.name}: ${signedUsd(tot.ty - tot.ly)} vs last year`;
-  document.getElementById('follow-sub').textContent = `${PERIOD.ptd} · ${money(tot.ty)} this year vs ${money(tot.ly)} on the same days last year`;
-  segButtons('follow-dims', dims.map(c => [c, followDimName(c)]), fol.dim, k => { fol.dim = k; renderFollow(); });
-  const values = fol.dim === 'SEG' ? Object.keys(SEG).filter(k => /_(new|repeat)$/.test(k) && !/^(millennial|gen_x|boomer)/.test(k)) : cubeValues(fol.dim);
-  const rows = values.map(v => {
-    const t = fol.dim === 'SEG' ? cubeTotal(f, v) : cubeTotal({...f, [fol.dim]: v}, seg);
-    return t && {v, ty: t.ty, ly: t.ly, diff: t.ty - t.ly};
-  }).filter(Boolean).sort((a, b) => b.diff - a.diff);
-  const isProd = fol.dim === 'STYLE_GROUP', max = Math.max(...rows.map(r => Math.abs(r.diff)), 1);
-  const box = document.getElementById('follow-rows');
-  box.className = 'rows' + (isProd ? ' with-stock' : '');
-  box.innerHTML = `<div class="hd n">${esc(followDimName(fol.dim))}</div><div class="hd"></div><div class="hd v">$ vs last year</div>` + (isProd ? '<div class="hd s">Stock left</div>' : '');
-  const name = v => fol.dim === 'SEG' ? SEG[v] : sliceLabel(fol.dim, v);
-  rows.forEach(r => {
-    const p = isProd && DATA.products.find(x => x.name === r.v);
-    box.append(barRow({name: name(r.v), sub: `${usdK(r.ty)} vs ${usdK(r.ly)}`, value: r.diff, max,
-      extra: isProd ? (p ? chip(p.status, `${wks(p.cover)} wks${p.status === 'ok' ? '' : ' · ' + STATUS[p.status].label.toLowerCase()}`) : '') : undefined,
-      tip: () => [signedUsd(r.diff), `${name(r.v)} · ${fol.hit.name}`, `${money(r.ty)} vs ${money(r.ly)} on the same days last year`]}));
-  });
-  document.getElementById('follow-foot').textContent = `Rows add up to ${signedUsd(rows.reduce((t, r) => t + r.diff, 0))}, the change for this group.` +
-    (isProd ? ' Stock left is for the whole family: the stock data has no region or store split.' : '');
-  panel.hidden = false;
-}
-function attachFollowups() {
-  const B = DATA.brief, body = document.getElementById('brief-body');
-  if (!B || B.status !== 'ok' || !DATA.scan) return;
-  const si = B.brief.sections.findIndex(sec => /week-by-week/i.test(sec.title));
-  const secEl = [...body.querySelectorAll('section.brief-sec')].find(el => /week-by-week/i.test(el.querySelector('h3').textContent));
-  if (si < 0 || !secEl) return;
-  const lis = secEl.querySelectorAll('li');
-  B.brief.sections[si].items.forEach((it, j) => {
-    const ids = [...new Set([...it.text.matchAll(/\{scan(\d+)_/g)].map(m => +m[1]))];
-    ids.forEach(i => {
-      const hit = DATA.scan.top[i - 1];
-      if (!hit || !lis[j]) return;
-      const row = el('div', 'followups');
-      row.append(el('span', 'who', hit.name));
-      const a = el('button', '', 'Weekly trend'); a.type = 'button'; a.addEventListener('click', () => showTrendFor(hit));
-      const b = el('button', '', 'Break it down'); b.type = 'button';
-      b.addEventListener('click', () => { fol.hit = hit; renderFollow();
-        document.getElementById('follow').scrollIntoView({behavior: 'smooth', block: 'nearest'}); });
-      row.append(a, b); lis[j].append(row);
-    });
-  });
 }
 
 /* ---------- Ask the data (chat prototype) ---------- */
@@ -1022,23 +930,18 @@ function cubeRows(key, measure) {
 
 // Four independent filters, each listing its values by this year's sales (largest first); product families
 // that could run out or have too much stock say so.
-// Values of one filter column, largest sales this year first.
-function cubeValues(col) {
+function trendFilters() {
+  const box = document.getElementById('trend-filters');
+  if (box.children.length) return;
   const cols = Object.keys(M.trend_slice_dims);
-  const salesOf = v => {
+  const salesOf = (col, v) => {
     const e = DATA.trend_cube[cols.map(c => c === col ? v : '*').concat('*').join('|')];
     return e ? e.s.reduce((t, w) => t + w[0], 0) : 0;
   };
-  return [...new Set(Object.keys(DATA.trend_cube).map(k => k.split('|')[cols.indexOf(col)]))]
-    .filter(v => v !== '*').sort((a, b) => salesOf(b) - salesOf(a));
-}
-function trendFilters() {
-  const box = document.getElementById('trend-filters');
-  if (box.children.length) { box.querySelectorAll('select').forEach(sel => { sel.value = tr.f[sel.dataset.col] || ''; }); return; }
-  const cols = Object.keys(M.trend_slice_dims);
-  const valuesOf = cubeValues;
+  const valuesOf = col => [...new Set(Object.keys(DATA.trend_cube).map(k => k.split('|')[cols.indexOf(col)]))]
+    .filter(v => v !== '*').sort((a, b) => salesOf(col, b) - salesOf(col, a));
   cols.forEach(col => {
-    const sel = document.createElement('select'); sel.dataset.col = col;
+    const sel = document.createElement('select');
     sel.setAttribute('aria-label', M.trend_slice_dims[col]);
     const status = v => { const p = col === 'STYLE_GROUP' && DATA.products.find(x => x.name === v);
       return p && (p.status === 'risk' || p.status === 'overstock') ? ` · ${STATUS[p.status].label.toLowerCase()}` : ''; };
@@ -1284,7 +1187,6 @@ function show(page) {
 document.getElementById('asof').innerHTML = `Data as of <b>${esc(M.as_of_label)}</b> · fiscal week ${esc(M.fiscal.split('W')[1])}`;
 document.getElementById('src').textContent = `Source ${M.source} · fingerprint ${M.fingerprint} · built ${M.built_at}`;
 renderBrief(DATA.brief, 'brief', [0, 1, 2, 2]);       // happened | changed, observations and week-by-week trends below
-attachFollowups();
 renderOpportunity();
 renderBrief(DATA.stock_brief, 'sbrief', [0, 0, 1, 1]); // shows · changed | observations · limits
 renderChat();
@@ -1296,7 +1198,6 @@ renderStockSummary();
 renderStockPage();
 document.getElementById('drill-close').addEventListener('click', () => { wf.sel = null; renderWaterfall(); renderDrill(); });
 document.getElementById('pdrill-close').addEventListener('click', () => { pd.sel = null; renderProducts(); renderProductDrill(); });
-document.getElementById('follow-close').addEventListener('click', () => { fol.hit = null; renderFollow(); });
 document.querySelectorAll('nav button, [data-goto]').forEach(b => b.addEventListener('click', () => {
   location.hash = b.dataset.page || b.dataset.goto; window.scrollTo({top: 0});
 }));
