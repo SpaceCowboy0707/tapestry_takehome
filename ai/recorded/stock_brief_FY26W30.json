@@ -1,9 +1,9 @@
 {
   "model": "claude-opus-5-5 (Claude Code session; regenerated with the neutral-tone prompt)",
-  "generated_at": "2026-10-12 00:41",
+  "generated_at": "2026-10-14 17:30",
   "fingerprint": "83cad9e6",
   "prompt_file": "ai/prompt_input_stock.txt",
-  "prompt_sha256": "d042def9d966",
+  "prompt_sha256": "676b633509e8",
   "brief": {
     "headline": "Weeks of stock left across all families are {cover_total} against {cover_total_ly} last year; {top1_name} and {top2_name} have under {risk_threshold} weeks left, and {over1_name}, {over2_name} and {over3_name} have more than {overstock_threshold}.",
     "sections": [
@@ -58,7 +58,11 @@
           },
           {
             "kind": "fact",
-            "text": "{over1_name}, {over2_name} and {over3_name} each hold more units than last year ({over1_stock}, {over2_stock} and {over3_stock}, against {over1_stock_ly}, {over2_stock_ly} and {over3_stock_ly}), and their sales vs last year are {over1_sales_yoy}, {over2_sales_yoy} and {over3_sales_yoy}."
+            "text": "Units sold per week rose most for {pace_up1_name}, from {pace_up1_prior} in weeks {pace_prior_first}–{pace_prior_last} to {pace_up1_latest} in weeks {pace_latest_first}–{pace_latest_last} (last year {pace_up1_prior_ly} and {pace_up1_latest_ly}); it has {pace_up1_cover} weeks of stock left. {pace_up2_name} went from {pace_up2_prior} to {pace_up2_latest}."
+          },
+          {
+            "kind": "fact",
+            "text": "Units sold per week fell most for {pace_down1_name}, from {pace_down1_prior} to {pace_down1_latest} over the same weeks (last year {pace_down1_prior_ly} and {pace_down1_latest_ly}), and for {pace_down2_name}, from {pace_down2_prior} to {pace_down2_latest}."
           }
         ]
       },
@@ -71,7 +75,7 @@
           },
           {
             "kind": "limit",
-            "text": "Sales in this extract look sampled: about {units_per_week_total} units sold per week against {stock_total} in stock, so the absolute weeks are likely overstated; the comparison with last year and the ranking between families are more reliable."
+            "text": "Weekly sales per family are small in this extract, about {units_per_week_total} units a week across all families, so a few orders move a family's weeks of stock left and its selling pace; the comparison with last year and the ranking between families are more reliable than the exact weeks."
           },
           {
             "kind": "limit",

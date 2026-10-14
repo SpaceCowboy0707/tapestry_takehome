@@ -50,6 +50,7 @@ core/
   brief.py       checks and renders the AI brief
   tools.py       chat tools: schema check, run on the data, results as named values
   opportunity.py growth opportunity rule and its facts
+  scan.py        weekly scan: groups flagged by fixed rules, for the briefs
 build.py         reads the extract, computes everything, checks it, writes dist/index.html
 ai/              prompts, prompt inputs (facts or tool list), recorded model output (briefs and chat runs)
 tests/           period alignment, brief checker, chat tool and opportunity tests
@@ -64,11 +65,12 @@ Measures live in `core/metrics.py` as plain functions that take a filtered DataF
 
 ## AI brief
 
-The brief at the top of the page is the AI feature: a Monday-morning summary a merchant or regional lead can read in under a minute. It has three parts: what happened over the period, what changed since last week (compared with the previous week and the previous stock count, which the dashboard itself doesn't show), and five observations that go a level deeper, each putting two areas side by side (customers, store vs online, Insider, products, stock, regions). It states facts and findings in a neutral tone; it doesn't interpret, speculate or make recommendations.
+The brief at the top of the page is the AI feature: a Monday-morning summary a merchant or regional lead can read in under a minute. It has four parts: what happened over the period, what changed since last week (compared with the previous week and the previous stock count, which the dashboard itself doesn't show), five observations that go a level deeper, each putting two areas side by side (customers, store vs online, Insider, products, stock, regions), and what the weekly scan found. It states facts and findings in a neutral tone; it doesn't interpret, speculate or make recommendations.
 
 How it is kept accurate:
 
 1. `core/facts.py` picks the numbers the brief may use (sales, growth, customer groups, top products, stock) from the values the dashboard already computed. Each fact has an id, a format and the section it comes from.
+   `core/scan.py` adds facts nobody had to think of in advance: it checks every region, product family, store vs online, full-price vs outlet and customer group, alone and in pairs, and flags groups whose sales are above or below last year week after week, speeding up or slowing down, or moving against the total. Groups with fewer than 30 customers in either year are left out; the rest are ranked by how far they sit from their parent's trend (a pair must differ from both its parents), and the top four single groups and top four pairs become facts. For the stock brief it adds the families whose selling pace changed most within the sell-rate window.
 2. `build.py` writes `ai/prompt_input.txt` (weekly brief) and `ai/prompt_input_stock.txt` (stock brief): each prompt in `ai/prompts/` plus the same list of facts. That text is given to a chat model (no API needed); its JSON reply is saved in `ai/recorded/brief_<week>.json` with the model name, time and data fingerprint.
 3. The model is not allowed to type a digit. Every number, and every product name that exists as a fact, is a placeholder such as `{top1_cover}`.
 4. `core/brief.py` checks the reply before it is published: valid structure, every placeholder names a real fact, no number typed by hand, the words around every change point the same way as its sign (a gain can't be described as "fell", a decline can't be described as "grew"; checked clause by clause), "from {old} to {new}" comparisons must move the way their verb says, every fact sentence cites a fact, and the data fingerprint matches.

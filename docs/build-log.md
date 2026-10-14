@@ -35,6 +35,12 @@ See `ai/prompts/weekly_brief.md`. The rules that matter most: never type a digit
 - Tested by typing a number into one answer in the browser: that answer was hidden, the others stayed.
 
 
+## Weekly scan (added after the first submission)
+
+- The brief only saw facts chosen by hand, so it missed patterns nobody had prepared, such as Greater China stores falling while Greater China online rose. `core/scan.py` now checks every region, product family, store vs online, full-price vs outlet and customer group, alone and in pairs, with fixed rules: week-after-week streaks, speeding up or slowing down between the earlier and latest complete weeks, and moving against the total.
+- Small groups are left out (under 30 customers in either year); this keeps a few orders from becoming a story. Ranking is by distance from the parent's trend, so subsets of an already-known story (first-time Gen Z in stores) don't crowd out new ones.
+- The scan only picks and measures; the briefs cite its values as facts and pass the same checks. Its values are recomputed independently from the Excel in the verification script.
+
 ## Growth opportunity card
 
 - A rule picks, the model explains: among product families with at least 4 weeks of stock, the one whose sales to first-time Gen Z grew most (`core/opportunity.py`). This week that is Brooklyn; Tabby and Pillow Tabby grew more but are excluded for low stock, and the card shows that.

@@ -107,6 +107,45 @@ def build_facts(data, win, prev_cover):
     add('genz_repeat_insider_store', insider(via(gz_rep(t), 'Retail Store')), 'pct0', 'Returning Gen Z customers in stores who are in Insider', 'Customers (Insider flag) → store vs online')
     add('genz_repeat_insider_store_ly', insider(via(gz_rep(l), 'Retail Store')), 'pct0', 'Returning Gen Z customers in stores who are in Insider, last year', 'Customers (Insider flag) → store vs online')
 
+    # Weekly scan (core/scan.py): slices that a fixed rule flagged, with their own values. Patterns are text facts.
+    PATTERN = {'against': 'moving against the total', 'streak_up': 'above last year week after week',
+               'streak_down': 'below last year week after week', 'speeding_up': 'speeding up', 'slowing': 'slowing down'}
+    sc = data['scan']
+    add('scan_early_first', sc['early_weeks'][0], 'int', 'Scan: first of the earlier weeks', 'Weekly scan')
+    add('scan_early_last', sc['early_weeks'][-1], 'int', 'Scan: last of the earlier weeks', 'Weekly scan')
+    add('scan_recent_first', sc['recent_weeks'][0], 'int', 'Scan: first of the latest complete weeks', 'Weekly scan')
+    add('scan_recent_last', sc['recent_weeks'][-1], 'int', 'Scan: last of the latest complete weeks', 'Weekly scan')
+    add('scan_min_customers', sc['rules']['min_customers'], 'int', 'Scan: fewest customers in either year for a group to count', 'Weekly scan')
+    add('scan_small_count', sc['small_excluded'], 'int', 'Scan: groups with a sizeable change left out as too small', 'Weekly scan')
+    for i, hit in enumerate(sc['top'], 1):
+        k = f'scan{i}'
+        add(f'{k}_name', hit['name'], 'text', f'Scan #{i}: group', 'Weekly scan')
+        add(f'{k}_pattern', PATTERN[hit['pattern']], 'text', f'Scan #{i}: pattern found', 'Weekly scan')
+        add(f'{k}_diff', hit['diff'], 'money_signed', f"{hit['name']}, change vs last year since the start of the data", 'Weekly scan')
+        add(f'{k}_yoy', hit['yoy'], 'pct_signed', f"{hit['name']}, sales vs last year since the start of the data", 'Weekly scan')
+        add(f'{k}_early_yoy', hit['early_yoy'], 'pct_signed', f"{hit['name']}, sales vs last year in the earlier weeks", 'Weekly scan')
+        add(f'{k}_recent_yoy', hit['recent_yoy'], 'pct_signed', f"{hit['name']}, sales vs last year in the latest complete weeks", 'Weekly scan')
+        add(f'{k}_streak', hit['streak'], 'int', f"{hit['name']}, latest complete weeks in a row on the same side of last year", 'Weekly scan')
+        add(f'{k}_customers', hit['customers'], 'int', f"{hit['name']}, customers", 'Weekly scan')
+        add(f'{k}_customers_ly', hit['customers_ly'], 'int', f"{hit['name']}, customers last year", 'Weekly scan')
+
+    # Stock scan: families whose selling pace changed most between the two halves of the sell-rate window.
+    ss = data['stock_scan']
+    add('pace_prior_first', ss['prior_weeks'][0], 'int', 'Pace: first of the earlier weeks', 'Stock scan')
+    add('pace_prior_last', ss['prior_weeks'][-1], 'int', 'Pace: last of the earlier weeks', 'Stock scan')
+    add('pace_latest_first', ss['latest_weeks'][0], 'int', 'Pace: first of the latest weeks', 'Stock scan')
+    add('pace_latest_last', ss['latest_weeks'][-1], 'int', 'Pace: last of the latest weeks', 'Stock scan')
+    for side in ('up', 'down'):
+        for i, r in enumerate(ss[side], 1):
+            k = f'pace_{side}{i}'
+            add(f'{k}_name', r['name'], 'text', f"Family whose selling pace {'rose' if side == 'up' else 'fell'} the most (#{i})", 'Stock scan')
+            add(f'{k}_prior', r['rate_prior'], 'dec1', f"{r['name']}, units sold per week in the earlier weeks", 'Stock scan')
+            add(f'{k}_latest', r['rate_latest'], 'dec1', f"{r['name']}, units sold per week in the latest weeks", 'Stock scan')
+            add(f'{k}_change', r['change'], 'pct_signed', f"{r['name']}, change in units sold per week", 'Stock scan')
+            add(f'{k}_prior_ly', r['rate_prior_ly'], 'dec1', f"{r['name']}, units sold per week in the earlier weeks, last year", 'Stock scan')
+            add(f'{k}_latest_ly', r['rate_latest_ly'], 'dec1', f"{r['name']}, units sold per week in the latest weeks, last year", 'Stock scan')
+            add(f'{k}_cover', r['cover'], 'weeks', f"{r['name']}, weeks of stock left", 'Stock scan')
+
     # What changed since last week. "Last week" is the previous complete week, or the same weekdays of it
     # when comparing with the week in progress; stock is compared with the previous snapshot.
     trend = {r['wk']: r for r in data['trend']}

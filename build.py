@@ -12,6 +12,7 @@ from core.facts import build_facts
 from core.headlines import SEGMENT_NAMES, headlines, products
 from core.inventory import add_inventory_cols, cover_at, inventory_view
 from core.periods import add_period_cols, as_of, windows
+from core.scan import sales_scan, stock_scan
 
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / 'data/raw/TYLY_data_sample.xlsx'
@@ -256,6 +257,10 @@ def build():
                   built_at=datetime.now().strftime('%Y-%m-%d %H:%M')),
         flash=flash, trend=trend, trend_cube=trend_cube, inventory=inventory,
         customers=customers, products=product_rows, product_drill=product_drill, headlines=heads)
+
+    # Weekly scan: slices flagged by fixed rules, for the briefs to cite.
+    data['scan'] = sales_scan(df, ref, weeks)
+    data['stock_scan'] = stock_scan(df, inventory, ref)
 
     # AI brief: the facts it may cite, the prompt input for whoever generates it, and the recorded model output.
     snap = inventory['snapshot_week']
