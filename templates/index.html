@@ -1186,7 +1186,7 @@ function show(page) {
 
 document.getElementById('asof').innerHTML = `Data as of <b>${esc(M.as_of_label)}</b> · fiscal week ${esc(M.fiscal.split('W')[1])}`;
 document.getElementById('src').textContent = `Source ${M.source} · fingerprint ${M.fingerprint} · built ${M.built_at}`;
-renderBrief(DATA.brief, 'brief', [0, 1, 2, 2]);       // happened | changed, observations and the scan below
+renderBrief(DATA.brief, 'brief', [0, 1, 2, 2]);       // happened | changed, observations and week-by-week trends below
 renderOpportunity();
 renderBrief(DATA.stock_brief, 'sbrief', [0, 0, 1, 1]); // shows · changed | observations · limits
 renderChat();

@@ -15,7 +15,7 @@ Rules:
    - "What happened": 3 to 5 fact items about the period as a whole (since the first day of the data).
    - "What changed since last week": 2 to 4 fact items. Each one compares this week with last week, using the facts about this week so far, the last complete week and the previous stock count. Say what moved, not where things stand.
    - "Observations": 5 fact items that go one level deeper than "What happened". Each one puts facts from at least two areas side by side (customers, store vs online, Insider, products, stock, regions) and states only what the cited facts show directly; do not repeat a "What happened" item. Then up to two limit items for figures that need a caveat. Leave out anything that needs a judgment the facts cannot show.
-   - "Found by the weekly scan": 3 to 5 fact items from the scan facts (ids starting with scan), then one limit item. The scan is a fixed rule that checks every region, product family, store vs online, full-price vs outlet and customer group, alone and in pairs, and flags a group whose sales are above or below last year week after week, speeding up or slowing down, or moving against the total. For a group, say how its sales vs last year compare between the earlier weeks and the latest complete weeks, using the scan week facts. Put two groups side by side when they belong to the same region or family and move in opposite directions. Do not repeat a point already made in another section. The limit item says which groups were left out as too small.
+   - "Week-by-week trends": 3 to 5 fact items from the scan facts (ids starting with scan), then one limit item. The scan facts come from a fixed rule that checks every region, product family, store vs online, full-price vs outlet and customer group, alone and in pairs, and flags a group whose sales are above or below last year week after week, speeding up or slowing down, or moving against the total. For a group, say how its sales vs last year compare between the earlier weeks and the latest complete weeks, using the scan week facts. Put two groups side by side when they belong to the same region or family and move in opposite directions. Do not repeat a point already made in another section. The limit item says which groups were left out as too small. Do not use the word "scan" in the brief; describe the groups and their trends.
    Do not interpret, speculate or give recommendations; the brief reports what the data shows, people decide.
 7. Plain business English. No jargon: no "YoY", "WTD", "pp", "SKU", "cohort". Say "vs last year", "this week so far", "first-time customers", "returning customers".
 8. Lead with what matters most for decisions, not with the biggest number.
@@ -29,6 +29,6 @@ Return only JSON, no commentary, in exactly this shape:
     {"title": "What happened", "items": [{"kind": "fact", "text": "..."}]},
     {"title": "What changed since last week", "items": [{"kind": "fact", "text": "..."}]},
     {"title": "Observations", "items": [{"kind": "fact", "text": "..."}]},
-    {"title": "Found by the weekly scan", "items": [{"kind": "fact", "text": "..."}, {"kind": "limit", "text": "..."}]}
+    {"title": "Week-by-week trends", "items": [{"kind": "fact", "text": "..."}, {"kind": "limit", "text": "..."}]}
   ]
 }

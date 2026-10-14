@@ -3,7 +3,7 @@
   "generated_at": "2026-10-14 17:30",
   "fingerprint": "83cad9e6",
   "prompt_file": "ai/prompt_input.txt",
-  "prompt_sha256": "ccea5e5b5afa",
+  "prompt_sha256": "f953feb631c7",
   "brief": {
     "headline": "Sales since {period_start} are {yoy_ptd} vs last year; first-time Gen Z customers accounted for {genz_new_share} of the growth, and {top1_name} and {top2_name}, the two largest product gains, have under {risk_threshold} weeks of stock left.",
     "sections": [
@@ -83,7 +83,7 @@
         ]
       },
       {
-        "title": "Found by the weekly scan",
+        "title": "Week-by-week trends",
         "items": [
           {
             "kind": "fact",
@@ -107,7 +107,7 @@
           },
           {
             "kind": "limit",
-            "text": "The scan checks every region, product family, store vs online, full-price vs outlet and customer group, alone and in pairs; {scan_small_count} groups with a sizeable change were left out because they had fewer than {scan_min_customers} customers in either year."
+            "text": "These trends cover every region, product family, store vs online, full-price vs outlet and customer group, alone and in pairs; {scan_small_count} groups with a sizeable change were left out because they had fewer than {scan_min_customers} customers in either year."
           }
         ]
       }
