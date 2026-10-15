@@ -2,6 +2,8 @@
 
 A sales dashboard built from the TYLY sample data, with a weekly summary written by AI. Python calculates every number, the page only displays them, and the AI never types a number itself.
 
+By Max Xiang. I made the analysis decisions; Claude wrote most of the code, and I reviewed every change.
+
 **Live page:** https://spacecowboy0707.github.io/tapestry_takehome/dist/
 
 The same diagrams as PDFs: [Repository structure](docs/Repository_structure.pdf) · [Weekly brief workflow](docs/Weekly_brief_workflow.pdf) · [Chat workflow](docs/Chat_workflow.pdf)
