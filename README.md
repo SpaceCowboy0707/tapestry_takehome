@@ -55,7 +55,7 @@ The data flows from top to bottom, and `build.py` runs every step.
 
 | File | What it does |
 |---|---|
-| `prompts/` | Writing rules for each AI output |
+| `prompts/` | Defining rules for each AI output |
 | `prompt_input*.txt` | Everything the model reads: the rules plus the values or the list of calculations (written by the build) |
 | `recorded/` | What the model wrote, with named slots instead of numbers, saved per week |
 
